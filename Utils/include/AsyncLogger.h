@@ -31,6 +31,9 @@ namespace hzd {
         L_FATAL     /* 致命错误 */
     };
 
+    /**
+      * @brief 异步日志工具 / Async log tool
+      */
     class AsyncLogger {
     public:
         ~AsyncLogger();

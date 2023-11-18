@@ -15,7 +15,9 @@
 namespace hzd {
 
     using json = nlohmann::json;
-
+    /**
+      * @brief 配置文件工具 / Configure tool
+      */
     class Configure {
     public:
         /**

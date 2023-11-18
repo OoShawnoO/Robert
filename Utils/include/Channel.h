@@ -15,6 +15,9 @@
 #include <condition_variable>   /* condition variable */
 
 namespace hzd {
+    /**
+      * @brief 信号量 / Semaphore
+      */
     struct Semaphore {
         explicit Semaphore(long count = 0);
         /**
@@ -32,7 +35,9 @@ namespace hzd {
         std::mutex mtx;
         std::condition_variable cond;
     };
-
+    /**
+      * @brief 线程安全队列 / Thread safe queue
+      */
     template<class T>
     struct Channel {
         /**
@@ -86,7 +91,11 @@ namespace hzd {
         std::mutex mtx;
         std::deque<T> data;
     };
-
+    /**
+      * @brief 阻塞型线程安全队列 / Block thread safe queue
+      * @param None
+      * @retval None
+      */
     template<class T>
     struct BlockChannel {
         /**
