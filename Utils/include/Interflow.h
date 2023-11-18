@@ -12,8 +12,10 @@
 
 #include <unistd.h>         /* close */
 #include <arpa/inet.h>      /* socket addr */
-#include <string>           /* string */
+#include <sys/shm.h>        /* shm */
 #include <sys/stat.h>       /* stat */
+#include <semaphore.h>      /* sem_t */
+#include <string>           /* string */
 #include <vector>           /* vector */
 #include <opencv2/core.hpp> /* Mat */
 
@@ -181,18 +183,66 @@ namespace hzd {
     };
 
     /**
+      * @brief 共享内存 / Share memory
+      */
+    class ShareMemory {
+    public:
+        ShareMemory(
+                bool               isProducer,
+                const std::string& shareKey,
+                long               capacity,
+                const std::string& producerSemKey,
+                const std::string& consumerSemKey
+        );
+        ~ShareMemory();
+
+        bool Read(const std::function<bool(unsigned char*)>& readCallback);
+        bool Write(const std::function<bool(unsigned char*)>& writeCallback);
+        inline void PostProducerSem() { if(producerSem){ sem_post(producerSem);} }
+        inline void PostConsumerSem() { if(consumerSem){ sem_post(consumerSem);} }
+        inline bool TryWaitProducerSem() {
+            return producerSem && sem_trywait(producerSem) == 0;
+        }
+        inline bool TryWaitConsumerSem() {
+            return consumerSem && sem_trywait(consumerSem) == 0;
+        };
+
+    private:
+        bool            isProducer{false};
+        int             shareId{-1};
+        std::string     shareKey{};
+        unsigned char*  sharePtr{nullptr};
+        long            shareCapacity;
+        std::string     producerSemKey{};
+        sem_t*          producerSem{nullptr};
+        std::string     consumerSemKey{};
+        sem_t*          consumerSem{nullptr};
+    };
+
+    /**
       * @brief 集成交互工具 / Integrated Interflow tool
       */
     class Interflow {
     public:
+        Interflow(
+            bool               isProducer,
+            const std::string& shareKey,
+            long               capacity,
+            const std::string& producerSemKey,
+            const std::string& consumerSemKey,
+            const std::string& ipAddr,
+            unsigned short     port,
+        );
+
+        void PostConsumer();
+        void PostProducer();
         bool SendMat(const cv::Mat& mat);
         bool ReceiveMat(cv::Mat& mat);
         bool SendJson(nlohmann::json& json);
         bool ReceiveJson(nlohmann::json& json);
-        void PostConsumer();
-        void PostProducer();
     private:
-        TCPSocket tcp;
+        ShareMemory shareMemory;
+        UDPSocket   udp;
     };
 
 } // hzd

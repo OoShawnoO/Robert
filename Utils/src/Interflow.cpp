@@ -11,6 +11,8 @@
 #include <cstring>          /* memcpy */
 #include <fcntl.h>          /* fcntl */
 #include <sys/sendfile.h>   /* sendfile */
+#include <sys/mman.h>       /* shm_open */
+#include <iostream>         /* cerr */
 
 #include "Interflow.h"      /* Interflow Socket TcpSocket UdpSocket */
 
@@ -744,5 +746,169 @@ namespace hzd {
 
     int UDPSocket::Close() {
         return Socket::Close();
+    }
+
+    ShareMemory::~ShareMemory() {
+        sem_close(producerSem);
+        sem_close(consumerSem);
+        munmap(sharePtr,shareCapacity);
+        sharePtr = nullptr;
+        sem_unlink(producerSemKey.c_str());
+        sem_unlink(consumerSemKey.c_str());
+        shm_unlink(shareKey.c_str());
+        close(shareId);
+    }
+
+    ShareMemory::ShareMemory(
+            bool              _isProducer,
+            const std::string &_shareKey,
+            long              capacity,
+            const std::string &_producerSemKey,
+            const std::string &_consumerSemKey
+    )
+    {
+        isProducer = _isProducer;
+
+        shareId = shm_open(_shareKey.c_str(),
+                           O_CREAT | O_RDWR,
+                           S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH);
+        if(shareId == -1) {
+            std::cerr << "failed to create share memory" << std::endl;
+            perror("shm_open");
+            exit(-1);
+        }
+        shareKey = _shareKey;
+
+        ftruncate(shareId,capacity);
+
+        sharePtr = static_cast<unsigned char*>(
+                mmap(
+                        nullptr,
+                        capacity,
+                        PROT_READ | PROT_WRITE,
+                        MAP_SHARED,
+                        shareId,
+                        0
+                )
+        );
+        if(sharePtr == MAP_FAILED) {
+            std::cerr << "failed to map share memory" << std::endl;
+            shm_unlink(shareKey.c_str());
+            close(shareId);
+            shareId = -1;
+            exit(-1);
+        }
+        shareCapacity = capacity;
+
+        producerSem = sem_open(_producerSemKey.c_str(),O_CREAT,0666,1);
+        if(producerSem == SEM_FAILED) {
+            std::cerr << "failed to create producer semaphore" << std::endl;
+            perror("sem_open");
+
+            munmap(sharePtr,shareCapacity);
+            sharePtr = nullptr;
+            shm_unlink(shareKey.c_str());
+            close(shareId);
+            shareId = -1;
+            exit(-1);
+        }
+        producerSemKey = _producerSemKey;
+
+        consumerSem = sem_open(_consumerSemKey.c_str(),O_CREAT,0666,0);
+        if(consumerSem == SEM_FAILED) {
+            std::cerr << "failed to create consumer semaphore" << std::endl;
+            perror("sem_open");
+
+            sem_unlink(producerSemKey.c_str());
+            munmap(sharePtr,shareCapacity);
+            sharePtr = nullptr;
+            shm_unlink(shareKey.c_str());
+            close(shareId);
+            shareId = -1;
+            exit(-1);
+        }
+        consumerSemKey = _consumerSemKey;
+
+        if(!isProducer) {
+            while(TryWaitConsumerSem());
+            PostProducerSem();
+        }
+    }
+
+    bool ShareMemory::Read(const std::function<bool(unsigned char *)>& readCallback) {
+        sem_wait(consumerSem);
+        if(readCallback(sharePtr)) {
+            sem_post(producerSem);
+            return true;
+        }
+        return false;
+    }
+
+    bool ShareMemory::Write(const std::function<bool(unsigned char *)>& writeCallback) {
+        sem_wait(producerSem);
+        if(writeCallback(sharePtr)){
+            sem_post(consumerSem);
+            return true;
+        }
+        return false;
+    }
+
+    Interflow::Interflow(
+            bool isProducer,
+            const std::string &shareKey,
+            long capacity,
+            const std::string &producerSemKey,
+            const std::string &consumerSemKey,
+            const std::string &ipAddr,
+            unsigned short port
+    ): shareMemory(isProducer,shareKey,capacity,producerSemKey,consumerSemKey)
+    {
+        if(isProducer) {
+            udp.SetDestAddr(ipAddr,port);
+        }else{
+            if(!udp.Init(ipAddr,port) || !udp.Bind()) {
+                exit(-1);
+            }
+            struct timeval timeout{};
+            timeout.tv_sec = 1;  // 设置超时时间为1秒
+            timeout.tv_usec = 0;
+
+            if (setsockopt(udp.Sock(), SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+                std::cerr << "Set socket timeout error" << std::endl;
+                udp.Close();
+                exit(-1);
+            }
+
+            int newBufferSize = 1024*1024;
+            if (setsockopt(udp.Sock(), SOL_SOCKET, SO_RCVBUF, &newBufferSize, sizeof(newBufferSize)) == -1){
+                std::cerr << "Set socket recv buffer error" << std::endl;
+                udp.Close();
+                exit(-1);
+            }
+        }
+    }
+
+    void Interflow::PostConsumer() {
+        shareMemory.PostConsumerSem();
+    }
+
+    void Interflow::PostProducer() {
+        shareMemory.PostProducerSem();
+    }
+
+    bool Interflow::SendMat(const cv::Mat &mat) {
+        return false;
+    }
+
+    bool Interflow::ReceiveMat(cv::Mat &mat) {
+        return false;
+    }
+
+    bool Interflow::SendJson(json &json) {
+        return false;
+    }
+
+    bool Interflow::ReceiveJson(json &json) {
+        return false;
     }
 } // hzd
