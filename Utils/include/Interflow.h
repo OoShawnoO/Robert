@@ -65,7 +65,7 @@ namespace hzd {
     public:
         virtual ~Socket();
         // 初始化 / Initialize
-        virtual bool Init(const std::string& ip,short port) = 0;
+        virtual bool Init(const std::string& ip,unsigned short port) = 0;
         // 初始化 / Initialize
         virtual void Init(int _sock,sockaddr_in _myAddr,sockaddr_in _destAddr);
         // 绑定socket / Bind socket
@@ -124,7 +124,7 @@ namespace hzd {
     public:
         TCPSocket();
         ~TCPSocket() override;
-        bool Init(const std::string& ip,short port) override;
+        bool Init(const std::string& ip,unsigned short port) override;
         void Init();
         bool Bind() override;
         bool Listen();
@@ -159,9 +159,9 @@ namespace hzd {
     public:
         UDPSocket();
         ~UDPSocket() override;
-        bool Init(const std::string& ip,short port) override;
-        bool Init(const std::string& ip,short port,const std::string& destIP,short destPort);
-        void SetDestAddr(const std::string& ip,short port);
+        bool Init(const std::string& ip,unsigned short port) override;
+        bool Init(const std::string& ip,unsigned short port,const std::string& destIP,short destPort);
+        void SetDestAddr(const std::string& ip,unsigned short port);
         bool Bind() override;
         int SendWithHeader(const char* data,size_t size) override;
         int SendWithHeader(const std::string& data) override;
@@ -196,17 +196,17 @@ namespace hzd {
         );
         ~ShareMemory();
 
-        bool Read(const std::function<bool(unsigned char*)>& readCallback);
-        bool Write(const std::function<bool(unsigned char*)>& writeCallback);
-        inline void PostProducerSem() { if(producerSem){ sem_post(producerSem);} }
-        inline void PostConsumerSem() { if(consumerSem){ sem_post(consumerSem);} }
+        inline void WaitProducerSem() { sem_wait(producerSem); }
+        inline void WaitConsumerSem() { sem_wait(consumerSem); }
+        inline void PostProducerSem() { sem_post(producerSem); }
+        inline void PostConsumerSem() { sem_post(consumerSem); }
         inline bool TryWaitProducerSem() {
             return producerSem && sem_trywait(producerSem) == 0;
         }
         inline bool TryWaitConsumerSem() {
             return consumerSem && sem_trywait(consumerSem) == 0;
         };
-
+        unsigned char* GetShareMemory();
     private:
         bool            isProducer{false};
         int             shareId{-1};
@@ -231,8 +231,16 @@ namespace hzd {
             const std::string& producerSemKey,
             const std::string& consumerSemKey,
             const std::string& ipAddr,
-            unsigned short     port,
+            unsigned short     port
         );
+
+#define MAX_SHARE_MAT_SIZE (1920*1080*3 + 4)
+        struct ShareMat {
+            int rows;
+            int cols;
+            int channels;
+            unsigned char data[MAX_SHARE_MAT_SIZE];
+        };
 
         void PostConsumer();
         void PostProducer();
@@ -241,10 +249,10 @@ namespace hzd {
         bool SendJson(nlohmann::json& json);
         bool ReceiveJson(nlohmann::json& json);
     private:
+        ShareMat*   shareMatPtr;
         ShareMemory shareMemory;
         UDPSocket   udp;
     };
-
 } // hzd
 
 #endif //UTILS_INTERFLOW_H

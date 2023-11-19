@@ -134,7 +134,7 @@ namespace hzd {
         TCPSocket::Close();
     }
 
-    bool TCPSocket::Init(const std::string &ip, short port) {
+    bool TCPSocket::Init(const std::string &ip, unsigned short port) {
         if(sock != -1) {
             close(sock);
             sock = -1;
@@ -507,7 +507,7 @@ namespace hzd {
         UDPSocket::Close();
     }
 
-    bool UDPSocket::Init(const std::string &ip, short port) {
+    bool UDPSocket::Init(const std::string &ip, unsigned short port) {
         if((sock = socket(AF_INET,type,0)) < 0){
             LOG_ERROR(SocketChan,strerror(errno));
             return false;
@@ -526,14 +526,14 @@ namespace hzd {
         return true;
     }
 
-    void UDPSocket::SetDestAddr(const std::string &ip, short port){
+    void UDPSocket::SetDestAddr(const std::string &ip, unsigned short port){
         destAddr.sin_addr.s_addr = inet_addr(ip.c_str());
         destAddr.sin_port = htons(port);
         destAddr.sin_family = type;
         destAddrLen = sizeof(destAddr);
     }
 
-    bool UDPSocket::Init(const std::string &ip, short port, const std::string &destIP, short destPort) {
+    bool UDPSocket::Init(const std::string &ip, unsigned short port, const std::string &destIP, short destPort) {
         SetDestAddr(destIP,destPort);
         return Init(ip,port);
     }
@@ -835,22 +835,8 @@ namespace hzd {
         }
     }
 
-    bool ShareMemory::Read(const std::function<bool(unsigned char *)>& readCallback) {
-        sem_wait(consumerSem);
-        if(readCallback(sharePtr)) {
-            sem_post(producerSem);
-            return true;
-        }
-        return false;
-    }
-
-    bool ShareMemory::Write(const std::function<bool(unsigned char *)>& writeCallback) {
-        sem_wait(producerSem);
-        if(writeCallback(sharePtr)){
-            sem_post(consumerSem);
-            return true;
-        }
-        return false;
+    unsigned char *ShareMemory::GetShareMemory() {
+        return sharePtr;
     }
 
     Interflow::Interflow(
@@ -863,6 +849,8 @@ namespace hzd {
             unsigned short port
     ): shareMemory(isProducer,shareKey,capacity,producerSemKey,consumerSemKey)
     {
+        shareMatPtr = reinterpret_cast<ShareMat*>(shareMemory.GetShareMemory());
+
         if(isProducer) {
             udp.SetDestAddr(ipAddr,port);
         }else{
@@ -897,18 +885,38 @@ namespace hzd {
     }
 
     bool Interflow::SendMat(const cv::Mat &mat) {
-        return false;
+        shareMemory.WaitProducerSem();
+        shareMatPtr->cols = mat.cols;
+        shareMatPtr->rows = mat.rows;
+        shareMatPtr->channels = mat.channels();
+        memcpy(shareMatPtr->data,mat.data,
+               mat.cols*mat.rows*mat.channels());
+        shareMemory.PostConsumerSem();
+        return true;
     }
 
     bool Interflow::ReceiveMat(cv::Mat &mat) {
-        return false;
+        shareMemory.WaitConsumerSem();
+        if(shareMatPtr->channels != 3){
+            while(shareMemory.TryWaitConsumerSem());
+            shareMemory.PostProducerSem();
+            return false;
+        }
+        mat = cv::Mat(shareMatPtr->rows,shareMatPtr->cols,CV_8UC3);
+        memcpy(mat.data,shareMatPtr->data,
+               shareMatPtr->rows*shareMatPtr->cols*shareMatPtr->channels);
+        shareMemory.PostProducerSem();
+        return true;
     }
 
     bool Interflow::SendJson(json &json) {
-        return false;
+        return 1 == udp.SendAll(to_string(json));
     }
 
     bool Interflow::ReceiveJson(json &json) {
-        return false;
+        std::string temp;
+        if(1 != udp.RecvAll(temp,false)) return false;
+        json = hzd::json::parse(temp);
+        return !json.empty();
     }
 } // hzd
