@@ -533,7 +533,7 @@ namespace hzd {
         destAddrLen = sizeof(destAddr);
     }
 
-    bool UDPSocket::Init(const std::string &ip, unsigned short port, const std::string &destIP, short destPort) {
+    bool UDPSocket::Init(const std::string &ip, unsigned short port, const std::string &destIP, unsigned short destPort) {
         SetDestAddr(destIP,destPort);
         return Init(ip,port);
     }
@@ -845,16 +845,20 @@ namespace hzd {
             long capacity,
             const std::string &producerSemKey,
             const std::string &consumerSemKey,
-            const std::string &ipAddr,
-            unsigned short port
+            const std::string &myIpAddr,
+            unsigned short myPort,
+            const std::string& destIpAddr,
+            unsigned short     destPort
     ): shareMemory(isProducer,shareKey,capacity,producerSemKey,consumerSemKey)
     {
         shareMatPtr = reinterpret_cast<ShareMat*>(shareMemory.GetShareMemory());
 
         if(isProducer) {
-            udp.SetDestAddr(ipAddr,port);
+            if(!udp.Init(myIpAddr,myPort,destIpAddr,destPort) || !udp.Bind()) {
+                exit(-1);
+            }
         }else{
-            if(!udp.Init(ipAddr,port) || !udp.Bind()) {
+            if(!udp.Init(myIpAddr,myPort,destIpAddr,destPort) || !udp.Bind()) {
                 exit(-1);
             }
             struct timeval timeout{};

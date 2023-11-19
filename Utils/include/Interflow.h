@@ -160,7 +160,7 @@ namespace hzd {
         UDPSocket();
         ~UDPSocket() override;
         bool Init(const std::string& ip,unsigned short port) override;
-        bool Init(const std::string& ip,unsigned short port,const std::string& destIP,short destPort);
+        bool Init(const std::string& ip,unsigned short port,const std::string& destIP,unsigned short destPort);
         void SetDestAddr(const std::string& ip,unsigned short port);
         bool Bind() override;
         int SendWithHeader(const char* data,size_t size) override;
@@ -230,8 +230,10 @@ namespace hzd {
             long               capacity,
             const std::string& producerSemKey,
             const std::string& consumerSemKey,
-            const std::string& ipAddr,
-            unsigned short     port
+            const std::string& myIpAddr,
+            unsigned short     myPort,
+            const std::string& destIpAddr,
+            unsigned short     destPort
         );
 
 #define MAX_SHARE_MAT_SIZE (1920*1080*3 + 4)

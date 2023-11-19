@@ -14,6 +14,6 @@ aux_source_directory(src SRC)
 # Binary Output Path
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 # Add Executable
-add_executable(${TARGET} ${SRC})
+# add_executable(${TARGET} ${SRC})
 # Link Libraries
-target_link_libraries(${TARGET})
+# target_link_libraries(${TARGET})
