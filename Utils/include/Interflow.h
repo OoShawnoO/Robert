@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file           : Interflow.h
   * @author         : huzhida
-  * @brief          : None
+  * @brief          : 通用交互工具类库
   * @date           : 2023/11/18
   ******************************************************************************
   */
@@ -197,24 +197,50 @@ namespace hzd {
                 const std::string& consumerSemKey
         );
         ~ShareMemory();
-        // 等待生产者信号量 / Wait producer semaphore
+        /**
+          * @brief 等待生产者信号量 / Wait producer semaphore
+          * @retval None
+          */
         inline void WaitProducerSem() { sem_wait(producerSem); }
-        // 等待消费者信号量 / Wait consumer semaphore
+        /**
+          * @brief 等待消费者信号量 / Wait consumer semaphore
+          * @retval None
+          */
         inline void WaitConsumerSem() { sem_wait(consumerSem); }
-        // 激活生产者信号量 / Post producer semaphore
+        /**
+          * @brief 激活生产者信号量 / Post producer semaphore
+          * @retval None
+          */
         inline void PostProducerSem() { sem_post(producerSem); }
-        // 激活消费者信号量 / Post consumer semaphore
+        /**
+          * @brief 激活消费者信号量 / Post consumer semaphore
+          * @retval None
+          */
         inline void PostConsumerSem() { sem_post(consumerSem); }
-        // 尝试等待生产者信号量 / Try to wait producer semaphore
+        /**
+          * @brief 尝试等待生产者信号量 / Try to wait producer semaphore
+          * @retval None
+          */
         inline bool TryWaitProducerSem() {
             return producerSem && sem_trywait(producerSem) == 0;
         }
-        // 尝试等待消费者信号量 / Try to wait consumer semaphore
+        /**
+          * @brief 尝试等待消费者信号量 / Try to wait consumer semaphore
+          * @retval None
+          */
         inline bool TryWaitConsumerSem() {
             return consumerSem && sem_trywait(consumerSem) == 0;
         };
-        // 获取共享内存地址 / Get share memory address
+        /**
+          * @brief 获取共享内存地址 / Get share memory address
+          * @retval None
+          */
         unsigned char* GetShareMemory();
+        /**
+          * @brief 清空共享内存 / Clean share memory
+          * @retval None
+          */
+        void Clear();
     private:
         bool            isProducer{false};
         int             shareId{-1};
@@ -235,13 +261,13 @@ namespace hzd {
         Interflow(
             bool               isProducer,
             bool               isTcp,
-            const std::string& shareKey,
-            const std::string& producerSemKey,
-            const std::string& consumerSemKey,
             const std::string& myIpAddr,
             unsigned short     myPort,
             const std::string& destIpAddr,
-            unsigned short     destPort
+            unsigned short     destPort,
+            const std::string& shareKey = "",
+            const std::string& producerSemKey = "",
+            const std::string& consumerSemKey = ""
         );
 
 #define MAX_SHARE_MAT_SIZE (1920*1080*3 + 4)
@@ -266,22 +292,39 @@ namespace hzd {
             // 通道数 / channel count
             int channels;
         };
-
-        // 激活消费者信号量 / Post consumer semaphore
-        void PostConsumer();
-        // 激活生产者信号量 / Post producer semaphore
-        void PostProducer();
-        // 使用TCP发送cv::Mat / Using tcp send cv::Mat
-        bool TcpSendMat(const cv::Mat& mat);
-        // 使用TCP接收cv::Mat / Using tcp receive cv::Mat
-        bool TcpReceiveMat(cv::Mat& mat);
-        // 使用共享内存发送cv::Mat / Using share memory send cv::Mat
-        bool ShareMemorySendMat(const cv::Mat& mat);
-        // 使用共享内存接收cv::Mat / Using share memory receive cv::Mat
-        bool ShareMemoryReceiveMat(cv::Mat& mat);
-        // 发送json数据 / Send json data
+        /**
+          * @brief 激活消费者信号量 / Post consumer semaphore
+          * @note 只有在使用共享内存时需要 / Just use when using share memory
+          * @retval None
+          */
+        void NotifyEnd();
+        /**
+          * @brief 发送cv::Mat / Send cv::Mat
+          * @param mat 需要发送的Mat / the Mat which need to send
+          * @note 当初始化时使用TCP时，将使用TCP进行传输，否则将使用共享内存
+          * @retval true 成功 / false 失败
+          */
+        bool SendMat(const cv::Mat& mat);
+        /**
+          * @brief 接收cv::Mat / Receive cv::Mat
+          * @param mat 用于保存接收的Mat / use for save received Mat
+          * @note 当初始化时使用TCP时，将使用TCP进行传输，否则将使用共享内存
+          * @retval true 成功 / false 失败
+          */
+        bool ReceiveMat(cv::Mat& mat);
+        /**
+          * @brief 发送json数据 / Send json data
+          * @param json 需要发送的json / the json which need to send
+          * @note 当初始化时使用TCP时，将使用TCP进行传输，否则将使用UDP
+          * @retval true 成功 / false 失败
+          */
         bool SendJson(nlohmann::json& json);
-        // 接收json数据 / Receive json data
+        /**
+          * @brief 接收json数据 / Receive json data
+          * @param json 用于保存接收的json / use for save received json
+          * @note 当初始化时使用TCP时，将使用TCP进行传输，否则将使用UDP
+          * @retval true 成功 / false 失败
+          */
         bool ReceiveJson(nlohmann::json& json);
 
     private:
@@ -302,6 +345,14 @@ namespace hzd {
         bool TcpSendJson(nlohmann::json& json);
         // tcp 接收json数据 / tcp Receive json data
         bool TcpReceiveJson(nlohmann::json& json);
+        // 使用TCP发送cv::Mat / Using tcp send cv::Mat
+        bool TcpSendMat(const cv::Mat& mat);
+        // 使用TCP接收cv::Mat / Using tcp receive cv::Mat
+        bool TcpReceiveMat(cv::Mat& mat);
+        // 使用共享内存发送cv::Mat / Using share memory send cv::Mat
+        bool ShareMemorySendMat(const cv::Mat& mat);
+        // 使用共享内存接收cv::Mat / Using share memory receive cv::Mat
+        bool ShareMemoryReceiveMat(cv::Mat& mat);
     };
 } // hzd
 

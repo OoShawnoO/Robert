@@ -15,6 +15,7 @@ include_directories(${OPENCV_INCLUDES})
 link_directories(lib)
 # Source
 aux_source_directory(src SRC)
+aux_source_directory(src/MissionReactor SRC)
 # Add Executable
 add_library(${TARGET} ${SRC})
 # Link Libraries

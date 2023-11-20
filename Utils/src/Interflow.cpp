@@ -762,6 +762,8 @@ namespace hzd {
     }
 
     ShareMemory::~ShareMemory() {
+        if(shareKey.empty() || producerSemKey.empty() || consumerSemKey.empty()) return;
+
         sem_close(producerSem);
         sem_close(consumerSem);
         munmap(sharePtr,shareCapacity);
@@ -780,6 +782,8 @@ namespace hzd {
             const std::string &_consumerSemKey
     )
     {
+        if(_shareKey.empty() || _producerSemKey.empty() || _consumerSemKey.empty()) return;
+
         isProducer = _isProducer;
 
         shareId = shm_open(_shareKey.c_str(),
@@ -852,18 +856,22 @@ namespace hzd {
         return sharePtr;
     }
 
+    void ShareMemory::Clear() {
+        bzero(sharePtr,shareCapacity);
+    }
+
     const std::string InterflowChan = "Interflow";
 
     Interflow::Interflow(
             bool                isProducer,
             bool                _isTcp,
-            const std::string   &shareKey,
-            const std::string   &producerSemKey,
-            const std::string   &consumerSemKey,
             const std::string   &myIpAddr,
             unsigned short      myPort,
             const std::string   &destIpAddr,
-            unsigned short      destPort
+            unsigned short      destPort,
+            const std::string   &shareKey,
+            const std::string   &producerSemKey,
+            const std::string   &consumerSemKey
     ): isTcp(_isTcp),shareMemory(isProducer,shareKey,MAX_SHARE_MAT_SIZE,producerSemKey,consumerSemKey)
     {
         shareMatPtr = reinterpret_cast<ShareMat*>(shareMemory.GetShareMemory());
@@ -921,12 +929,9 @@ namespace hzd {
 
     }
 
-    void Interflow::PostConsumer() {
+    void Interflow::NotifyEnd() {
+        shareMemory.Clear();
         shareMemory.PostConsumerSem();
-    }
-
-    void Interflow::PostProducer() {
-        shareMemory.PostProducerSem();
     }
 
     bool Interflow::TcpSendMat(const cv::Mat &mat) {
@@ -1013,6 +1018,14 @@ namespace hzd {
 
     bool Interflow::ReceiveJson(json &json) {
         return isTcp ? TcpReceiveJson(json) : UdpReceiveJson(json);
+    }
+
+    bool Interflow::SendMat(const cv::Mat &mat) {
+        return isTcp ? TcpSendMat(mat) : ShareMemorySendMat(mat);
+    }
+
+    bool Interflow::ReceiveMat(cv::Mat &mat) {
+        return isTcp ? TcpReceiveMat(mat) : ShareMemoryReceiveMat(mat);
     }
 
 } // hzd
