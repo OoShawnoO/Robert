@@ -56,8 +56,7 @@ namespace hzd {
         }
         while(!logger.isStop) {
             if(!logger.logChan.pop(item)) {
-                std::cerr << "[FATAL] pop error" << std::endl;
-                exit(-1);
+                break;
             }
             logger.writeLogItem(item);
         }

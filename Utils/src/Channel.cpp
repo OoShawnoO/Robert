@@ -7,7 +7,7 @@
   ******************************************************************************
   */
 
-#include "Channel.h"
+#include "Channel.h"    /* Channel */
 
 namespace hzd{
 

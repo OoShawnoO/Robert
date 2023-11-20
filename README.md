@@ -45,6 +45,11 @@ Robert 将被开发用于多模型同时推理与交互，图形化编辑器形�
 
   Responsible for graphical user interface, customized process editing, and image display after processing.    
 
-    负责图形化用户界面、客制化流程编辑、处理后图像显示等。
+  负责图形化用户界面、客制化流程编辑、处理后图像显示等。
 
+- **Utils**
+
+  Utility tools,such as log、thread-safe queue、configure control and so on.
+  
+  通用工具,日志、线程安全队列、配置文件管理等。
     

@@ -64,6 +64,8 @@ namespace hzd {
         struct stat stat                    {};
     public:
         virtual ~Socket();
+        // 移交所有权 / move ownership
+        virtual void Moveto(Socket& s);
         // 初始化 / Initialize
         virtual bool Init(const std::string& ip,unsigned short port) = 0;
         // 初始化 / Initialize
@@ -195,17 +197,23 @@ namespace hzd {
                 const std::string& consumerSemKey
         );
         ~ShareMemory();
-
+        // 等待生产者信号量 / Wait producer semaphore
         inline void WaitProducerSem() { sem_wait(producerSem); }
+        // 等待消费者信号量 / Wait consumer semaphore
         inline void WaitConsumerSem() { sem_wait(consumerSem); }
+        // 激活生产者信号量 / Post producer semaphore
         inline void PostProducerSem() { sem_post(producerSem); }
+        // 激活消费者信号量 / Post consumer semaphore
         inline void PostConsumerSem() { sem_post(consumerSem); }
+        // 尝试等待生产者信号量 / Try to wait producer semaphore
         inline bool TryWaitProducerSem() {
             return producerSem && sem_trywait(producerSem) == 0;
         }
+        // 尝试等待消费者信号量 / Try to wait consumer semaphore
         inline bool TryWaitConsumerSem() {
             return consumerSem && sem_trywait(consumerSem) == 0;
         };
+        // 获取共享内存地址 / Get share memory address
         unsigned char* GetShareMemory();
     private:
         bool            isProducer{false};
@@ -226,8 +234,8 @@ namespace hzd {
     public:
         Interflow(
             bool               isProducer,
+            bool               isTcp,
             const std::string& shareKey,
-            long               capacity,
             const std::string& producerSemKey,
             const std::string& consumerSemKey,
             const std::string& myIpAddr,
@@ -238,22 +246,62 @@ namespace hzd {
 
 #define MAX_SHARE_MAT_SIZE (1920*1080*3 + 4)
         struct ShareMat {
+            // 行数 / row count
             int rows;
+            // 列数 / col count
             int cols;
+            // 通道数 / channel count
             int channels;
+            // 存储空间 / memory space
             unsigned char data[MAX_SHARE_MAT_SIZE];
         };
 
+        struct TcpMatProp {
+            // 压缩后大小 / zipped size
+            size_t size;
+            // 行数 / row count
+            int rows;
+            // 列数 / col count
+            int cols;
+            // 通道数 / channel count
+            int channels;
+        };
+
+        // 激活消费者信号量 / Post consumer semaphore
         void PostConsumer();
+        // 激活生产者信号量 / Post producer semaphore
         void PostProducer();
-        bool SendMat(const cv::Mat& mat);
-        bool ReceiveMat(cv::Mat& mat);
+        // 使用TCP发送cv::Mat / Using tcp send cv::Mat
+        bool TcpSendMat(const cv::Mat& mat);
+        // 使用TCP接收cv::Mat / Using tcp receive cv::Mat
+        bool TcpReceiveMat(cv::Mat& mat);
+        // 使用共享内存发送cv::Mat / Using share memory send cv::Mat
+        bool ShareMemorySendMat(const cv::Mat& mat);
+        // 使用共享内存接收cv::Mat / Using share memory receive cv::Mat
+        bool ShareMemoryReceiveMat(cv::Mat& mat);
+        // 发送json数据 / Send json data
         bool SendJson(nlohmann::json& json);
+        // 接收json数据 / Receive json data
         bool ReceiveJson(nlohmann::json& json);
+
     private:
-        ShareMat*   shareMatPtr;
-        ShareMemory shareMemory;
-        UDPSocket   udp;
+        bool                        isTcp;
+        ShareMat*                   shareMatPtr;
+        ShareMemory                 shareMemory;
+        TcpMatProp                  tcpMatProp{};
+        std::vector<unsigned char>  buffer;
+        std::vector<int>            encodeParams;
+        UDPSocket                   udp;
+        TCPSocket                   tcp;
+
+        // udp 发送json数据 / udp Send json data
+        bool UdpSendJson(nlohmann::json& json);
+        // udp 接收json数据 / udp Receive json data
+        bool UdpReceiveJson(nlohmann::json& json);
+        // tcp 发送json数据 / tcp Send json data
+        bool TcpSendJson(nlohmann::json& json);
+        // tcp 接收json数据 / tcp Receive json data
+        bool TcpReceiveJson(nlohmann::json& json);
     };
 } // hzd
 

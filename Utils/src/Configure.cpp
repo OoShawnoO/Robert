@@ -7,9 +7,10 @@
   ******************************************************************************
   */
 
-#include <fstream>
-#include <iostream>
-#include "Configure.h"
+#include <fstream>      /* ifstream */
+#include <iostream>     /* cerr */
+
+#include "Configure.h"  /* Configure*/
 
 namespace hzd {
 
@@ -47,11 +48,48 @@ namespace hzd {
         }
         conf = json::parse(in);
         in.close();
-        return true;
+        return modify();
     }
 
-    void Configure::Reload(json &config) {
+    bool Configure::Reload(json &config) {
         conf = config;
+        return modify();
+    }
+
+    bool Configure::modify() {
+        log.channelLevel = conf["Log"]["channels"];
+        log.saveRootPath = conf["Log"]["path"];
+
+        interflow.isProducer = conf["Interflow"]["isProducer"];
+        interflow.isTcp = conf["Interflow"]["isTcp"];
+        interflow.shareKey = conf["Interflow"]["shareKey"];
+        interflow.producerSemKey = conf["Interflow"]["producerSemKey"];
+        interflow.consumerSemKey = conf["Interflow"]["consumerSemKey"];
+        interflow.myIpAddr = conf["Interflow"]["myIpAddr"];
+        interflow.myPort = conf["Interflow"]["myPort"];
+        interflow.destIpAddr = conf["Interflow"]["destIpAddr"];
+        interflow.destPort = conf["Interflow"]["destPort"];
+
+        for(auto yolo : conf["Yolo"]) {
+            YoloConfigure yoloConf;
+
+            yoloConf.weightFilePath = yolo["weightFilePath"];
+            yoloConf.version = yolo["version"];
+            yoloConf.isPose = yolo["isPose"];
+            yoloConf.cuda = yolo["cuda"];
+            yoloConf.deviceId = yolo["deviceId"];
+            yoloConf.size = {yolo["size"][0],yolo["size"][1]};
+            yoloConf.confThreshold = yolo["confThreshold"];
+            yoloConf.iouThreshold = yolo["iouThreshold"];
+            auto transport = yolo["transport"];
+            for(auto item = transport.begin();item != transport.end(); item++)
+            {
+                yoloConf.transport[stoi(item.key())] = stoi(std::string(item.value()));
+            }
+            yolos.emplace_back(yoloConf);
+        }
+
+        return true;
     }
 
 } // hzd

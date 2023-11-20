@@ -8,13 +8,14 @@
   */
 
 
-#include <cstring>          /* memcpy */
-#include <fcntl.h>          /* fcntl */
-#include <sys/sendfile.h>   /* sendfile */
-#include <sys/mman.h>       /* shm_open */
-#include <iostream>         /* cerr */
+#include <cstring>                  /* memcpy */
+#include <fcntl.h>                  /* fcntl */
+#include <sys/sendfile.h>           /* sendfile */
+#include <sys/mman.h>               /* shm_open */
+#include <iostream>                 /* cerr */
+#include <opencv2/imgcodecs.hpp>    /* imencode imdecode */
 
-#include "Interflow.h"      /* Interflow Socket TcpSocket UdpSocket */
+#include "Interflow.h"              /* Interflow Socket TcpSocket UdpSocket */
 
 
 namespace hzd {
@@ -65,6 +66,12 @@ namespace hzd {
         destAddr = _destAddr;
     }
 
+    void Socket::Moveto(Socket &s) {
+        s = *this;
+        sock = BAD_FILE_DESCRIPTOR;
+        file = BAD_FILE_DESCRIPTOR;
+    }
+
     /* TCP Impl */
     TCPSocket::TCPSocket() {
         type = SOCK_STREAM;
@@ -75,7 +82,8 @@ namespace hzd {
      * @return -1 false
      */
     int TCPSocket::sendImpl(const char *data) {
-        size_t hadSend,needSend;
+        size_t needSend;
+        ssize_t hadSend;
         while(writeCursor < writeTotalBytes){
             needSend = writeTotalBytes - writeCursor;
             if((hadSend = ::send(sock,data + writeCursor,needSend,MSG_NOSIGNAL)) <= 0){
@@ -119,6 +127,10 @@ namespace hzd {
                     shutdown(sock,SHUT_RDWR);
                     isNew = true;
                     return 0;
+                }else if(hadRecv == 0) {
+                    LOG_INFO(SocketChan,"对端关闭");
+                    Close();
+                    return -1;
                 }
                 LOG_ERROR(SocketChan, strerror(errno));
                 return -1;
@@ -459,7 +471,8 @@ namespace hzd {
     }
 
     int UDPSocket::sendImpl(const char *data) {
-        size_t hadSend,needSend;
+        size_t needSend;
+        ssize_t hadSend;
         while(writeCursor < writeTotalBytes){
             needSend = (writeTotalBytes - writeCursor) > SOCKET_BUF_SIZE ? SOCKET_BUF_SIZE : writeTotalBytes - writeCursor;
             memcpy(buffer,data + writeCursor,needSend);
@@ -594,7 +607,7 @@ namespace hzd {
             }
             isNew = false;
         }
-        size_t hadSend;
+        ssize_t hadSend;
         while(writeCursor < writeTotalBytes){
             bzero(buffer,SOCKET_BUF_SIZE);
             ssize_t hadRead = read(file,buffer,SOCKET_BUF_SIZE);
@@ -621,7 +634,7 @@ namespace hzd {
             writeCursor = 0;
             isNew = false;
         }
-        size_t hadSend;
+        ssize_t hadSend;
         while(writeCursor < writeTotalBytes){
             bzero(buffer,SOCKET_BUF_SIZE);
             ssize_t hadRead = read(file,buffer,SOCKET_BUF_SIZE);
@@ -839,45 +852,73 @@ namespace hzd {
         return sharePtr;
     }
 
+    const std::string InterflowChan = "Interflow";
+
     Interflow::Interflow(
-            bool isProducer,
-            const std::string &shareKey,
-            long capacity,
-            const std::string &producerSemKey,
-            const std::string &consumerSemKey,
-            const std::string &myIpAddr,
-            unsigned short myPort,
-            const std::string& destIpAddr,
-            unsigned short     destPort
-    ): shareMemory(isProducer,shareKey,capacity,producerSemKey,consumerSemKey)
+            bool                isProducer,
+            bool                _isTcp,
+            const std::string   &shareKey,
+            const std::string   &producerSemKey,
+            const std::string   &consumerSemKey,
+            const std::string   &myIpAddr,
+            unsigned short      myPort,
+            const std::string   &destIpAddr,
+            unsigned short      destPort
+    ): isTcp(_isTcp),shareMemory(isProducer,shareKey,MAX_SHARE_MAT_SIZE,producerSemKey,consumerSemKey)
     {
         shareMatPtr = reinterpret_cast<ShareMat*>(shareMemory.GetShareMemory());
 
         if(isProducer) {
-            if(!udp.Init(myIpAddr,myPort,destIpAddr,destPort) || !udp.Bind()) {
-                exit(-1);
-            }
-        }else{
-            if(!udp.Init(myIpAddr,myPort,destIpAddr,destPort) || !udp.Bind()) {
-                exit(-1);
-            }
-            struct timeval timeout{};
-            timeout.tv_sec = 1;  // 设置超时时间为1秒
-            timeout.tv_usec = 0;
+            if(isTcp) {
 
-            if (setsockopt(udp.Sock(), SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-                std::cerr << "Set socket timeout error" << std::endl;
-                udp.Close();
-                exit(-1);
-            }
+                if(!tcp.Init(myIpAddr,myPort) || !tcp.Bind()){
+                    exit(-1);
+                }
+                TCPSocket tempSocket;
+                if (!tcp.Listen() || !tcp.Accept(tempSocket)) {
+                    exit(-1);
+                }
+                tempSocket.Moveto(tcp);
 
-            int newBufferSize = 1024*1024;
-            if (setsockopt(udp.Sock(), SOL_SOCKET, SO_RCVBUF, &newBufferSize, sizeof(newBufferSize)) == -1){
-                std::cerr << "Set socket recv buffer error" << std::endl;
-                udp.Close();
-                exit(-1);
+                encodeParams.emplace_back(cv::IMWRITE_JPEG_QUALITY);
+                encodeParams.emplace_back(80);
+            }
+            else {
+                if(!udp.Init(myIpAddr,myPort,destIpAddr,destPort) || !udp.Bind()) {
+                    exit(-1);
+                }
             }
         }
+        else {
+            if(isTcp) {
+                tcp.Init();
+                if(!tcp.Connect(destIpAddr,destPort)){
+                    exit(-1);
+                }
+            }
+            else {
+                if(!udp.Init(myIpAddr,myPort,destIpAddr,destPort) || !udp.Bind()) {
+                    exit(-1);
+                }
+                struct timeval timeout{};
+                timeout.tv_sec = 1;  // 设置超时时间为1秒
+                timeout.tv_usec = 0;
+
+                if (setsockopt(udp.Sock(), SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+                    std::cerr << "Set socket timeout error" << std::endl;
+                    udp.Close();
+                    exit(-1);
+                }
+
+                int newBufferSize = 1024 * 1024;
+                if (setsockopt(udp.Sock(), SOL_SOCKET, SO_RCVBUF, &newBufferSize, sizeof(newBufferSize)) == -1) {
+                    std::cerr << "Set socket recv buffer error" << std::endl;
+                    udp.Close();
+                    exit(-1);
+                }
+            }
+        }
+
     }
 
     void Interflow::PostConsumer() {
@@ -888,7 +929,38 @@ namespace hzd {
         shareMemory.PostProducerSem();
     }
 
-    bool Interflow::SendMat(const cv::Mat &mat) {
+    bool Interflow::TcpSendMat(const cv::Mat &mat) {
+        if(!isTcp) return false;
+
+        cv::imencode(".jpg", mat, buffer, encodeParams);
+
+        tcpMatProp.size = buffer.size();
+
+        if(!tcp.Send((const char*)&tcpMatProp,sizeof(tcpMatProp))
+        || !tcp.Send((const char*)buffer.data(),buffer.size())){
+            LOG_ERROR(InterflowChan, strerror(errno));
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Interflow::TcpReceiveMat(cv::Mat &mat) {
+        if(!isTcp) return false;
+        std::string temp;
+        if(tcp.Recv(temp,sizeof(tcpMatProp),false) <= 0){
+            return false;
+        }
+        tcpMatProp = *(TcpMatProp*)temp.data();
+        if(tcp.Recv(temp,tcpMatProp.size,false) <= 0) {
+            return false;
+        }
+        buffer.assign(temp.begin(),temp.end());
+        mat = cv::imdecode(buffer,cv::IMREAD_COLOR);
+        return !mat.empty();
+    }
+
+    bool Interflow::ShareMemorySendMat(const cv::Mat &mat) {
         shareMemory.WaitProducerSem();
         shareMatPtr->cols = mat.cols;
         shareMatPtr->rows = mat.rows;
@@ -899,7 +971,7 @@ namespace hzd {
         return true;
     }
 
-    bool Interflow::ReceiveMat(cv::Mat &mat) {
+    bool Interflow::ShareMemoryReceiveMat(cv::Mat &mat) {
         shareMemory.WaitConsumerSem();
         if(shareMatPtr->channels != 3){
             while(shareMemory.TryWaitConsumerSem());
@@ -913,14 +985,34 @@ namespace hzd {
         return true;
     }
 
-    bool Interflow::SendJson(json &json) {
+    bool Interflow::UdpSendJson(json &json) {
         return 1 == udp.SendAll(to_string(json));
     }
 
-    bool Interflow::ReceiveJson(json &json) {
+    bool Interflow::UdpReceiveJson(json &json) {
         std::string temp;
         if(1 != udp.RecvAll(temp,false)) return false;
         json = hzd::json::parse(temp);
         return !json.empty();
     }
+
+    bool Interflow::TcpSendJson(json &json) {
+        return 1 == tcp.SendAll(to_string(json));
+    }
+
+    bool Interflow::TcpReceiveJson(json &json) {
+        std::string temp;
+        if(1 != tcp.RecvAll(temp,false)) return false;
+        json = hzd::json::parse(temp);
+        return !json.empty();
+    }
+
+    bool Interflow::SendJson(json &json) {
+        return isTcp ? TcpSendJson(json) : UdpSendJson(json);
+    }
+
+    bool Interflow::ReceiveJson(json &json) {
+        return isTcp ? TcpReceiveJson(json) : UdpReceiveJson(json);
+    }
+
 } // hzd
