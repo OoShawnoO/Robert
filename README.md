@@ -13,6 +13,15 @@
 > - path: _Utils/include_
 > - url:_https://github.com/nlohmann/json.git_
 
+> **ONNX Runtime is a cross-platform inference and training machine-learning accelerator. v1.15.1 ↑**
+> - author: *microsoft*
+> - path: _Service/include/Yolo_
+> - url:_https://github.com/microsoft/onnxruntime.git
+
+> **OpenCV: Open Source Computer Vision Library 4.7.0 ↑**
+> - author: *opencv*
+> - path: _Utils/include_
+> - url:_https://github.com/opencv/opencv.git_
 
 ## Usage / 用法
 ```shell

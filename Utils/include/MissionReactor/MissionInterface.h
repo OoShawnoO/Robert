@@ -43,14 +43,25 @@ namespace hzd {
             ParameterType   type{BOOL};
 
             Parameter() = default;
-            explicit Parameter(bool _bool) : data(_bool) {}
-            explicit Parameter(int32_t _int32) : data(_int32) {}
-            explicit Parameter(double _double) : data(_double) {}
+            explicit Parameter(bool _bool) : data(_bool) { type = BOOL; }
+            explicit Parameter(int32_t _int32) : data(_int32) { type = INT32; }
+            explicit Parameter(double _double) : data(_double) { type = DOUBLE; }
 
-            inline bool&    asBool()  { return data._bool; }
-            inline int32_t& asInt32() { return data._int32; }
-            inline double& asDouble() { return data._double; }
+            inline bool&    asBool()  {
+                assert(type == BOOL);
+                return data._bool;
+            }
+            inline int32_t& asInt32() {
+                assert(type == INT32);
+                return data._int32;
+            }
+            inline double& asDouble() {
+                assert(type == DOUBLE);
+                return data._double;
+            }
         };
+
+#define PARAMETER_SIZE sizeof(hzd::MissionInterface::Parameter)
 
         static unsigned int staticMissionCount;
 
@@ -78,6 +89,39 @@ namespace hzd {
 
     protected:
         explicit MissionInterface(std::string name);
+    };
+
+    struct Settlement {
+        enum StartType {
+            StartItemAppear,
+            StartItemAppearInBound,
+            StartItemStayInBound,
+        };
+#define SETTLEMENT_STARTTYPE_SIZE sizeof(hzd::Settlement::StartType)
+        enum EndType {
+            EndItemDisappear,
+            EndItemAppearInBound,
+            EndItemStayInBound,
+            EndItemDisappearInBound
+        };
+#define SETTLEMENT_ENDTYPE_SIZE sizeof(hzd::Settlement::EndType)
+        enum Status {
+            Wait,
+            Start,
+            Running,
+            End
+        };
+        Status                          status{Wait};
+        int                             startDuration{0};
+        int                             endDuration{0};
+        Item                            startBound{};
+        Item                            endBound{};
+        StartType                       startType{StartItemAppear};
+        EndType                         endType{EndItemDisappear};
+        std::vector<ItemID>             startItems{};
+        std::vector<ItemID>             endItems{};
+        std::vector<GlobalMissionIndex> rightMissions{};
+
     };
 
 } // hzd

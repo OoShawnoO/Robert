@@ -10,10 +10,13 @@
 #ifndef ROBERT_MISSIONREACTOR_H
 #define ROBERT_MISSIONREACTOR_H
 
-#include <chrono>   /* chrono */
-#include <vector>   /* vector */
+#include <chrono>                               /* chrono */
+#include <vector>                               /* vector */
 
-#include "MissionInterface.h"   /* SignalMap */
+#include "AsyncLogger.h"                        /* AsyncLogger */
+#include "MissionReactor/MissionFactory.h"      /* MissionFactory */
+#include "MissionReactor/MissionPacker.h"       /* MissionPacker */
+#include "MissionReactor/MissionInterface.h"    /* SignalMap */
 
 namespace hzd {
     using FrameNo = unsigned int;
@@ -22,14 +25,15 @@ namespace hzd {
 
     class MissionReactor {
     public:
-        enum ResStatus {
-            None,
-            Timeout
-        };
-
         struct ReactInput {
             FrameNo    frameNo;
             ItemVecMap itemVecMap;
+        };
+
+        enum ResStatus {
+            None,
+            Timeout,
+            NotSuccess,
         };
 
         struct Res {
@@ -37,44 +41,11 @@ namespace hzd {
             std::vector<GlobalMissionIndex> errorMissions;
         };
 
-        struct Settlement {
-            enum StartType {
-                StartItemAppear,
-                StartItemAppearInBound,
-                StartItemStayInBound,
-            };
-#define SETTLEMENT_STARTTYPE_SIZE sizeof(hzd::MissionReactor::Settlement::StartType);
-            enum EndType {
-                EndItemDisappear,
-                EndItemAppearInBound,
-                EndItemStayInBound,
-                EndItemDisappearInBound
-            };
-#define SETTLEMENT_ENDTYPE_SIZE sizeof(hzd::MissionReactor::Settlement::EndType);
-            enum Status {
-                Wait,
-                Start,
-                Running,
-                End
-            };
-            Status                          status{Wait};
-            int                             startDuration{0};
-            int                             endDuration{0};
-            Item                            startBound{};
-            Item                            endBound{};
-            StartType                       startType{StartItemAppear};
-            EndType                         endType{EndItemDisappear};
-            std::vector<ItemID>             startItems{};
-            std::vector<ItemID>             endItems{};
-            std::vector<GlobalMissionIndex> rightMissions{};
-
-        }settlement;
-
-
         int                                                     analysisFrameCount{};
         double                                                  startTolerance{};
         double                                                  endTolerance{};
         int                                                     saveResultCount{};
+        Settlement                                              settlement;
         std::string                                             mainMissionName{};
         std::vector<Ptr<MissionInterface>>                      globalMissions{};
         std::vector<Ptr<MissionInterface>>                      workMissions{};
@@ -84,12 +55,13 @@ namespace hzd {
 
 
         MissionReactor();
-        bool LoadMission(const std::string& missionFilePath);
-        Res React(const ReactInput& input);
         void Clear();
+        Res React(const ReactInput& input);
+        bool LoadMission(const std::string& missionFilePath);
 
     private:
         int                                     fps{};
+        int                                     flagCount{0};
         FrameNo                                 frameNo{};
         FrameNo                                 startFrameNo{};
         SignalMap                               signalMap {{0,true}};
