@@ -26,11 +26,11 @@ namespace hzd {
 
     std::unordered_map<std::string,LogLevel> AsyncLogger::channelLevelMap;
 
-    AsyncLogger::AsyncLogger(std::string _logSaveRootPath)
-    : logSaveRootPath(std::move(_logSaveRootPath)){
-        auto channels = Configure::Get()["Log"]["channel"];
-        for(auto iter = channels.begin();iter != channels.end();++iter ) {
-            channelLevelMap[iter.key()] = strLevelMap.at(iter.value());
+    AsyncLogger::AsyncLogger()
+    {
+        conf.Load(Configure::Get());
+        for(const auto& iter : conf.channelLevel) {
+            channelLevelMap[iter.first] = strLevelMap.at(iter.second);
         }
         logThread = std::thread(LogLoop,this);
     }
@@ -51,8 +51,8 @@ namespace hzd {
     void AsyncLogger::LogLoop(AsyncLogger* ptrLogger) {
         auto& logger = *ptrLogger;
         LogItem item{};
-        if(!logger.logSaveRootPath.empty() && !logger.fp) {
-            logger.fp = fopen(logger.logSaveRootPath.c_str(),"a+");
+        if(!logger.conf.saveRootPath.empty() && !logger.fp) {
+            logger.fp = fopen(logger.conf.saveRootPath.c_str(),"a+");
         }
         while(!logger.isStop) {
             if(!logger.logChan.pop(item)) {
@@ -75,7 +75,7 @@ namespace hzd {
             const char*             filename,
             const char*             function
     ) {
-        static AsyncLogger asyncLogger(Configure::Get()["Log"]["path"]);
+        static AsyncLogger asyncLogger;
         static time_t last = 0;
         static char timeStr[20];
         std::time_t current = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

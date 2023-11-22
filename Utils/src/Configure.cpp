@@ -14,6 +14,8 @@
 
 namespace hzd {
 
+    bool Configure::isInit = true;
+
     std::vector<std::string> Configure::Keys() {
         std::vector<std::string> k;
         for(auto it=conf.begin();it != conf.end();it++){
@@ -22,13 +24,8 @@ namespace hzd {
         return k;
     }
 
-    auto Configure::operator[](const std::string &key) -> json::value_type {
-        return conf[key];
-    }
-
-    Configure &Configure::Get() {
-        static Configure config("../etc/config.json");
-        return config;
+    auto Configure::operator[](const std::string &key) const -> json::value_type {
+        return conf.at(key);
     }
 
     Configure::Configure(const std::string &configPath) {
@@ -48,28 +45,31 @@ namespace hzd {
         }
         conf = json::parse(in);
         in.close();
-        return modify();
+        return true;
     }
 
     bool Configure::Reload(json &config) {
         conf = config;
-        return modify();
+        return true;
     }
 
-    bool Configure::modify() {
-        log.channelLevel = conf["Log"]["channels"];
-        log.saveRootPath = conf["Log"]["path"];
+    Configure &Configure::Get(const std::string &filePath) {
+        static Configure configure("../etc/config.json");
+        return configure;
+    }
 
-        interflow.isProducer = conf["Interflow"]["isProducer"];
-        interflow.isTcp = conf["Interflow"]["isTcp"];
-        interflow.shareKey = conf["Interflow"]["shareKey"];
-        interflow.producerSemKey = conf["Interflow"]["producerSemKey"];
-        interflow.consumerSemKey = conf["Interflow"]["consumerSemKey"];
-        interflow.myIpAddr = conf["Interflow"]["myIpAddr"];
-        interflow.myPort = conf["Interflow"]["myPort"];
-        interflow.destIpAddr = conf["Interflow"]["destIpAddr"];
-        interflow.destPort = conf["Interflow"]["destPort"];
+    bool LogConfigure::Load(const Configure &conf) {
+        try{
+            channelLevel = conf["Log"]["channels"];
+            saveRootPath = conf["Log"]["path"];
+            return true;
+        }catch(...){
+            return false;
+        }
+    }
 
+    std::vector<YoloConfigure> YoloConfigure::Load(const Configure &conf) {
+        std::vector<YoloConfigure> yolos;
         for(auto yolo : conf["Yolo"]) {
             YoloConfigure yoloConf;
 
@@ -81,15 +81,30 @@ namespace hzd {
             yoloConf.size = {yolo["size"][0],yolo["size"][1]};
             yoloConf.confThreshold = yolo["confThreshold"];
             yoloConf.iouThreshold = yolo["iouThreshold"];
-            auto transport = yolo["transport"];
-            for(auto item = transport.begin();item != transport.end(); item++)
+            auto _transport = yolo["transport"];
+            for(auto item = _transport.begin();item != _transport.end(); item++)
             {
                 yoloConf.transport[stoi(item.key())] = stoi(std::string(item.value()));
             }
             yolos.emplace_back(yoloConf);
         }
-
-        return true;
+        return yolos;
     }
 
+    bool InterflowConfigure::Load(const Configure &conf) {
+        try{
+            isProducer = conf["Interflow"]["isProducer"];
+            isTcp = conf["Interflow"]["isTcp"];
+            shareKey = conf["Interflow"]["shareKey"];
+            producerSemKey = conf["Interflow"]["producerSemKey"];
+            consumerSemKey = conf["Interflow"]["consumerSemKey"];
+            myIpAddr = conf["Interflow"]["myIpAddr"];
+            myPort = conf["Interflow"]["myPort"];
+            destIpAddr = conf["Interflow"]["destIpAddr"];
+            destPort = conf["Interflow"]["destPort"];
+            return true;
+        }catch(...){
+            return false;
+        }
+    }
 } // hzd

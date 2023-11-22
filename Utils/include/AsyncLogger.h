@@ -39,6 +39,7 @@ namespace hzd {
         ~AsyncLogger();
         const static std::unordered_map<std::string,LogLevel> strLevelMap;
         static std::unordered_map<std::string,LogLevel> channelLevelMap;
+
         /**
           * @brief 日志工作循环 / Log loop
           * @param AsyncLogger* a ptr of global single configure object
@@ -99,7 +100,7 @@ namespace hzd {
                 {L_FATAL,"\033[31m"}
         };
 
-        std::string                     logSaveRootPath = "log";
+        LogConfigure                    conf;
         char                            buffer[LOG_BUF_SIZE] = {0};
         char                            writeBuffer[LOG_BUF_SIZE * 10] = {0};
         int                             writeCursor{0};
@@ -108,7 +109,7 @@ namespace hzd {
         std::thread                     logThread{};
         bool                            isStop{false};
 
-        explicit AsyncLogger(std::string  logSaveRootPath = "log");
+        explicit AsyncLogger();
         void writeLogItem(LogItem& item);
     };
 

@@ -17,7 +17,6 @@ namespace hzd {
         startTolerance = 0.8;
         endTolerance = 0.95;
         saveResultCount = 8196;
-        startFrameNo = 0;
     }
 
     bool MissionReactor::LoadMission(const std::string &missionFilePath) {
@@ -349,7 +348,6 @@ namespace hzd {
 
     void MissionReactor::Clear() {
         fps = 0;
-        startFrameNo = 0;
         finished.clear();
         itemNameMap.clear();
         nameItemMap.clear();

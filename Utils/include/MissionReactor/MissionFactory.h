@@ -10,7 +10,7 @@
 #ifndef ROBERT_MISSIONFACTORY_H
 #define ROBERT_MISSIONFACTORY_H
 
-#include "MissionReactor/MissionInterface.h"        /* MissionInterface */
+#include "MissionReactor/MissionImpl.h"             /* MissionImpl */
 
 namespace hzd {
     template<typename T>

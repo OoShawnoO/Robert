@@ -64,18 +64,24 @@ namespace hzd {
 #define PARAMETER_SIZE sizeof(hzd::MissionInterface::Parameter)
 
         static unsigned int staticMissionCount;
+        // 检测容忍度 / check tolerance
+        const double tolerance = 0.6;
 
         int                             index{-1};
+        int                             duration{0};
+        int                             rightCount{0};
+        int                             startSignalCount{0};
+        int                             endSignalCount{0};
         bool                            isInit{false};
         std::string                     name{};
         std::vector<Parameter>          parameters{};
-        ItemID                          itemI{-1};
-        ItemID                          itemII{-1};
+        ItemID                          itemA{-1};
+        ItemID                          itemB{-1};
         Item                            bound{};
         bool                            anyoneTriggle{true};
         std::deque<bool>                records{};
-        SignalID                        startSignal{0};
-        SignalID                        endSignal{0};
+        std::vector<SignalID>           startSignals{};
+        std::vector<SignalID>           endSignals{};
 
         virtual int operator()(
                 const ItemVecMap&       itemVecMap,
