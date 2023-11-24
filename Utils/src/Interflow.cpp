@@ -134,6 +134,7 @@ namespace hzd {
             const std::string   &consumerSemKey
     ): isTcp(_isTcp),shareMemory(isProducer,shareKey,MAX_SHARE_MAT_SIZE,producerSemKey,consumerSemKey)
     {
+        isInit = true;
         shareMatPtr = reinterpret_cast<ShareMat*>(shareMemory.GetShareMemory());
 
         if(isProducer) {
@@ -190,6 +191,7 @@ namespace hzd {
     }
 
     void Interflow::NotifyEnd() {
+        if(!isInit) return;
         shareMemory.Clear();
         shareMemory.PostConsumerSem();
     }
@@ -212,6 +214,7 @@ namespace hzd {
 
     bool Interflow::TcpReceiveMat(cv::Mat &mat) {
         if(!isTcp) return false;
+
         std::string temp;
         if(tcp.Recv(temp,sizeof(tcpMatProp),false) <= 0){
             return false;
@@ -273,18 +276,26 @@ namespace hzd {
     }
 
     bool Interflow::SendJson(json &json) {
+        if(!isInit) return false;
+
         return isTcp ? TcpSendJson(json) : UdpSendJson(json);
     }
 
     bool Interflow::ReceiveJson(json &json) {
+        if(!isInit) return false;
+
         return isTcp ? TcpReceiveJson(json) : UdpReceiveJson(json);
     }
 
     bool Interflow::SendMat(const cv::Mat &mat) {
+        if(!isInit) return false;
+
         return isTcp ? TcpSendMat(mat) : ShareMemorySendMat(mat);
     }
 
     bool Interflow::ReceiveMat(cv::Mat &mat) {
+        if(!isInit) return false;
+
         return isTcp ? TcpReceiveMat(mat) : ShareMemoryReceiveMat(mat);
     }
 

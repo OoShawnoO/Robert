@@ -1,0 +1,13 @@
+{
+  "Server" : {
+    "ip": "127.0.0.1",
+    "port": 9999,
+    "epollTimeout": 0,
+    "reactorCount": 1,
+    "isEdgeTrigger": false,
+    "isOneshot": true,
+    "isNonblock": false,
+    "allow": [],
+    "deny": []
+  }
+}

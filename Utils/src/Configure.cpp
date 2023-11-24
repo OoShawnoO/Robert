@@ -107,4 +107,21 @@ namespace hzd {
             return false;
         }
     }
+
+    bool ServerConfigure::Load(const Configure &conf) {
+        try {
+            ip = conf["Server"]["ip"];
+            port = conf["Server"]["port"];
+            epollTimeout = conf["Server"]["epollTimeout"];
+            reactorCount = conf["Server"]["reactorCount"];
+            isEdgeTrigger = conf["Server"]["isEdgeTrigger"];
+            isOneShot = conf["Server"]["isOneshot"];
+            isNonblock = conf["Server"]["isNonblock"];
+            for(const auto& allowItem : conf["Server"]["allow"]) allow.emplace_back(allowItem);
+            for(const auto& denyItem : conf["Server"]["deny"]) deny.emplace_back(denyItem);
+        }catch(...) {
+            return false;
+        }
+        return true;
+    }
 } // hzd

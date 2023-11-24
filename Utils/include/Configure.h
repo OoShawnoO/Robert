@@ -58,6 +58,32 @@ namespace hzd {
         Configure() = default;
         explicit Configure(const std::string& configPath);
     };
+
+    /**
+     * @brief 服务器相关配置 / Server configure
+     */
+    struct ServerConfigure {
+        // IP地址 / IP Address
+        std::string ip{};
+        // 端口 / Port
+        unsigned short port{};
+        // epoll超时时间 / Epoll timeout duration
+        int epollTimeout{};
+        // Reactor数量 / Reactor count
+        int reactorCount{1};
+        // 是否使用边沿触发 / Edge trigger or not
+        bool isEdgeTrigger{false};
+        // 是否使用One shot / One shot or not
+        bool isOneShot{true};
+        // 是否非阻塞 / None block or not
+        bool isNonblock{true};
+        // 放行IP列表 / Allow Ip list
+        std::vector<std::string> allow{};
+        // 禁止IP列表 / Deny Ip list
+        std::vector<std::string> deny{};
+
+        bool Load(const Configure& configure);
+    };
     /**
      * @brief 日志相关配置 / Log configure
      */

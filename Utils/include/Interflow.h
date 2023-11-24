@@ -17,6 +17,42 @@
 #include "Socket.h"         /* Socket */
 
 namespace hzd {
+    /**
+     * @brief 控制类型 / Control type
+     */
+    enum ControlType {
+        // 确认成功收到
+        Ack,
+        // Interflow握手
+        Handshake,
+        // 开始传输
+        Start,
+        // 暂停传输
+        Stop,
+        // 切换配置
+        Change,
+        // Interflow挥手
+        Wave
+    };
+
+    enum MarkType {
+        // 正确接收
+        Right,
+        // 图像等待超时
+        MatTimeout,
+        // 结果等待超时
+        ResultTimeout
+    };
+
+    struct ControlPacket {
+        // 帧号
+        size_t      frameID;
+        // 操作类型
+        ControlType control;
+        // 标记
+        MarkType    mark;
+    };
+
 
     /**
       * @brief 共享内存 / Share memory
@@ -92,13 +128,15 @@ namespace hzd {
       */
     class Interflow {
     public:
+        Interflow() = default;
+
         Interflow(
             bool               isProducer,
             bool               isTcp,
             const std::string& myIpAddr,
             unsigned short     myPort,
-            const std::string& destIpAddr,
-            unsigned short     destPort,
+            const std::string& destIpAddr = "",
+            unsigned short     destPort = 0,
             const std::string& shareKey = "",
             const std::string& producerSemKey = "",
             const std::string& consumerSemKey = ""
@@ -117,6 +155,8 @@ namespace hzd {
         };
 
         struct TcpMatProp {
+            // 帧号 / frame id
+            size_t frameID;
             // 压缩后大小 / zipped size
             size_t size;
             // 行数 / row count
@@ -162,6 +202,7 @@ namespace hzd {
         bool ReceiveJson(nlohmann::json& json);
 
     private:
+        bool                        isInit{false};
         bool                        isTcp;
         ShareMat*                   shareMatPtr;
         ShareMemory                 shareMemory;
