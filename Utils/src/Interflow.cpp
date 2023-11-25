@@ -120,6 +120,18 @@ namespace hzd {
         bzero(sharePtr,shareCapacity);
     }
 
+    Interflow::CacheQueueItem& Interflow::CacheQueue::Adjust(size_t frameID) {
+        while(queue.front().frameID < frameID) {
+            queue.pop_front();
+        }
+        return queue.front();
+    }
+
+    void Interflow::CacheQueue::EmplaceBack(Interflow::CacheQueueItem &&item) {
+        if(queue.size() > 64) queue.pop_front();
+        queue.emplace_back(std::move(item));
+    }
+
     const std::string InterflowChan = "Interflow";
 
     Interflow::Interflow(
@@ -192,40 +204,9 @@ namespace hzd {
 
     void Interflow::NotifyEnd() {
         if(!isInit) return;
+        if(isTcp) return;
         shareMemory.Clear();
         shareMemory.PostConsumerSem();
-    }
-
-    bool Interflow::TcpSendMat(const cv::Mat &mat) {
-        if(!isTcp) return false;
-
-        cv::imencode(".jpg", mat, buffer, encodeParams);
-
-        tcpMatProp.size = buffer.size();
-
-        if(!tcp.Send((const char*)&tcpMatProp,sizeof(tcpMatProp))
-        || !tcp.Send((const char*)buffer.data(),buffer.size())){
-            LOG_ERROR(InterflowChan, strerror(errno));
-            return false;
-        }
-
-        return true;
-    }
-
-    bool Interflow::TcpReceiveMat(cv::Mat &mat) {
-        if(!isTcp) return false;
-
-        std::string temp;
-        if(tcp.Recv(temp,sizeof(tcpMatProp),false) <= 0){
-            return false;
-        }
-        tcpMatProp = *(TcpMatProp*)temp.data();
-        if(tcp.Recv(temp,tcpMatProp.size,false) <= 0) {
-            return false;
-        }
-        buffer.assign(temp.begin(),temp.end());
-        mat = cv::imdecode(buffer,cv::IMREAD_COLOR);
-        return !mat.empty();
     }
 
     bool Interflow::ShareMemorySendMat(const cv::Mat &mat) {
@@ -253,50 +234,115 @@ namespace hzd {
         return true;
     }
 
-    bool Interflow::UdpSendJson(json &json) {
-        return 1 == udp.SendAll(to_string(json));
+    bool Interflow::UdpSendJson(const json &json) {
+        std::string temp = to_string(json);
+        size_t size = temp.size();
+
+        return udp.Send((const char*)&size,sizeof(size_t)) == 1
+            && udp.Send(temp,size);
     }
 
     bool Interflow::UdpReceiveJson(json &json) {
         std::string temp;
-        if(1 != udp.RecvAll(temp,false)) return false;
-        json = hzd::json::parse(temp);
+        if(!udp.Recv(temp,sizeof(size_t),false)){
+            return false;
+        }
+        size_t size = *(size_t*)temp.data();
+        if(!udp.Recv(temp,size,false)) {
+            return false;
+        }
+        json = json::parse(temp);
         return !json.empty();
     }
 
-    bool Interflow::TcpSendJson(json &json) {
-        return 1 == tcp.SendAll(to_string(json));
+    bool Interflow::SendItem(const cv::Mat &mat, const json &json) {
+        if(isTcp) {
+            return TcpSendItem(mat,json);
+        }else{
+            return ShareMemorySendMat(mat) && UdpSendJson(json);
+        }
     }
 
-    bool Interflow::TcpReceiveJson(json &json) {
+    bool Interflow::ReceiveItem(cv::Mat &mat, json &json) {
+        if(isTcp) {
+            return TcpReceiveItem(mat,json);
+        }else{
+            return ShareMemoryReceiveMat(mat) && UdpReceiveJson(json);
+        }
+    }
+
+    bool Interflow::TcpSendItem(const cv::Mat &mat, const json &json) {
+        if(!isInit || !isTcp) {
+            LOG_ERROR(InterflowChan,"未初始化或您正在使用共享内存+UDP方案，不支持TCP");
+            return false;
+        }
+
+        cv::imencode(".jpg", mat, cacheQueueItem.matBuffer, encodeParams);
+
+        cacheQueueItem.tcpMatProp.size = cacheQueueItem.matBuffer.size();
+
+        if(!tcp.Send((const char*)&cacheQueueItem.tcpMatProp,sizeof(cacheQueueItem.tcpMatProp))
+           || !tcp.Send((const char*)cacheQueueItem.matBuffer.data(),cacheQueueItem.matBuffer.size())){
+            LOG_ERROR(InterflowChan, std::string{"send mat failed,reason:"} + strerror(errno));
+            return false;
+        }
+
+        cacheQueueItem.result = to_string(json);
+        cacheQueueItem.resultSize = cacheQueueItem.result.size();
+        if(!tcp.Send((const char*)&cacheQueueItem.resultSize,sizeof(cacheQueueItem.resultSize))
+           || !tcp.Send(cacheQueueItem.result.c_str(),cacheQueueItem.resultSize)) {
+            LOG_ERROR(InterflowChan, std::string{"send result failed,reason:"} + strerror(errno));
+            return false;
+        }
+
+        cacheQueue.EmplaceBack(std::move(cacheQueueItem));
+        cacheQueueItem = CacheQueueItem{};
+        return true;
+    }
+
+    bool Interflow::TcpReceiveItem(cv::Mat &mat, json &json) {
+        if(!isInit || !isTcp) {
+            LOG_ERROR(InterflowChan,"未初始化或您正在使用共享内存+UDP方案，不支持TCP");
+            return false;
+        }
         std::string temp;
-        if(1 != tcp.RecvAll(temp,false)) return false;
-        json = hzd::json::parse(temp);
-        return !json.empty();
+        if(tcp.Recv(temp,sizeof(cacheQueueItem.tcpMatProp),false) <= 0){
+            return false;
+        }
+        cacheQueueItem.tcpMatProp = *(TcpMatProp*)temp.data();
+        if(tcp.Recv(temp,cacheQueueItem.tcpMatProp.size,false) <= 0) {
+            return false;
+        }
+        cacheQueueItem.matBuffer.assign(temp.begin(),temp.end());
+        mat = cv::imdecode(cacheQueueItem.matBuffer,cv::IMREAD_COLOR);
+        if(mat.empty()) return false;
+
+        if(tcp.Recv(temp,sizeof(size_t),false) <= 0 ) {
+            return false;
+        }
+        cacheQueueItem.resultSize = *(size_t*)temp.data();
+        if(tcp.Recv(temp,cacheQueueItem.resultSize,false) <= 0) {
+            return false;
+        }
+        json = json::parse(temp);
+        if(json.empty()) return false;
+        return true;
     }
 
-    bool Interflow::SendJson(json &json) {
-        if(!isInit) return false;
-
-        return isTcp ? TcpSendJson(json) : UdpSendJson(json);
+    Interflow::CacheQueueItem::CacheQueueItem(Interflow::CacheQueueItem && cq) noexcept {
+        frameID = cq.frameID;
+        tcpMatProp = cq.tcpMatProp;
+        matBuffer = std::move(cq.matBuffer);
+        resultSize = cq.resultSize;
+        result = std::move(cq.result);
     }
 
-    bool Interflow::ReceiveJson(json &json) {
-        if(!isInit) return false;
-
-        return isTcp ? TcpReceiveJson(json) : UdpReceiveJson(json);
+    Interflow::CacheQueueItem& Interflow::CacheQueueItem::operator=(Interflow::CacheQueueItem && cq)  noexcept {
+        frameID = cq.frameID;
+        tcpMatProp = cq.tcpMatProp;
+        matBuffer = std::move(cq.matBuffer);
+        resultSize = cq.resultSize;
+        result = std::move(cq.result);
+        return *this;
     }
-
-    bool Interflow::SendMat(const cv::Mat &mat) {
-        if(!isInit) return false;
-
-        return isTcp ? TcpSendMat(mat) : ShareMemorySendMat(mat);
-    }
-
-    bool Interflow::ReceiveMat(cv::Mat &mat) {
-        if(!isInit) return false;
-
-        return isTcp ? TcpReceiveMat(mat) : ShareMemoryReceiveMat(mat);
-    }
-
 } // hzd

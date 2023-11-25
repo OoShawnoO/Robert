@@ -21,11 +21,11 @@ namespace hzd {
      * @brief 控制类型 / Control type
      */
     enum ControlType {
+        // 配置
+        Config,
         // 确认成功收到
         Ack,
-        // Interflow握手
-        Handshake,
-        // 开始传输
+        // 开始工作
         Start,
         // 暂停传输
         Stop,
@@ -155,8 +155,6 @@ namespace hzd {
         };
 
         struct TcpMatProp {
-            // 帧号 / frame id
-            size_t frameID;
             // 压缩后大小 / zipped size
             size_t size;
             // 行数 / row count
@@ -166,64 +164,67 @@ namespace hzd {
             // 通道数 / channel count
             int channels;
         };
+
+        struct CacheQueueItem {
+            size_t                      frameID{};
+            TcpMatProp                  tcpMatProp{};
+            std::vector<unsigned char>  matBuffer{};
+            size_t                      resultSize{};
+            std::string                 result{};
+
+            CacheQueueItem() = default;
+            CacheQueueItem(CacheQueueItem&&) noexcept ;
+            CacheQueueItem& operator=(CacheQueueItem&&) noexcept;
+        };
+
+        struct CacheQueue {
+            void EmplaceBack(CacheQueueItem&& item);
+            CacheQueueItem& Adjust(size_t frameID);
+
+        private:
+            std::deque<CacheQueueItem>  queue{};
+        };
+
+        /**
+          * @brief 发送Mat + json / Send mat and json
+          * @param mat 需要发送的Mat / the Mat which need to send
+          * @param json 需要发送的json / the json which need to send
+          * @retval true 成功 / false 失败
+          */
+        bool SendItem(const cv::Mat& mat,const nlohmann::json& json);
+        /**
+          * @brief 接收Mat + json / Receive mat and json
+          * @param mat 用于保存接收的Mat / use for save received Mat
+          * @param json 用于保存接收的json / use for save received json
+          * @retval true 成功 / false 失败
+          */
+        bool ReceiveItem(cv::Mat& mat,nlohmann::json& json);
         /**
           * @brief 激活消费者信号量 / Post consumer semaphore
           * @note 只有在使用共享内存时需要 / Just use when using share memory
           * @retval None
           */
         void NotifyEnd();
-        /**
-          * @brief 发送cv::Mat / Send cv::Mat
-          * @param mat 需要发送的Mat / the Mat which need to send
-          * @note 当初始化时使用TCP时，将使用TCP进行传输，否则将使用共享内存
-          * @retval true 成功 / false 失败
-          */
-        bool SendMat(const cv::Mat& mat);
-        /**
-          * @brief 接收cv::Mat / Receive cv::Mat
-          * @param mat 用于保存接收的Mat / use for save received Mat
-          * @note 当初始化时使用TCP时，将使用TCP进行传输，否则将使用共享内存
-          * @retval true 成功 / false 失败
-          */
-        bool ReceiveMat(cv::Mat& mat);
-        /**
-          * @brief 发送json数据 / Send json data
-          * @param json 需要发送的json / the json which need to send
-          * @note 当初始化时使用TCP时，将使用TCP进行传输，否则将使用UDP
-          * @retval true 成功 / false 失败
-          */
-        bool SendJson(nlohmann::json& json);
-        /**
-          * @brief 接收json数据 / Receive json data
-          * @param json 用于保存接收的json / use for save received json
-          * @note 当初始化时使用TCP时，将使用TCP进行传输，否则将使用UDP
-          * @retval true 成功 / false 失败
-          */
-        bool ReceiveJson(nlohmann::json& json);
 
     private:
         bool                        isInit{false};
         bool                        isTcp;
         ShareMat*                   shareMatPtr;
         ShareMemory                 shareMemory;
-        TcpMatProp                  tcpMatProp{};
-        std::vector<unsigned char>  buffer;
+        CacheQueue                  cacheQueue;
+        CacheQueueItem              cacheQueueItem;
         std::vector<int>            encodeParams;
         UDPSocket                   udp;
         TCPSocket                   tcp;
 
+        // tcp 发送Mat + json / tcp Send mat + json data
+        bool TcpSendItem(const cv::Mat& mat,const json& json);
+        // tcp 接收Mat + json / tcp Receive mat + json data
+        bool TcpReceiveItem(cv::Mat& mat,json& json);
         // udp 发送json数据 / udp Send json data
-        bool UdpSendJson(nlohmann::json& json);
+        bool UdpSendJson(const nlohmann::json& json);
         // udp 接收json数据 / udp Receive json data
         bool UdpReceiveJson(nlohmann::json& json);
-        // tcp 发送json数据 / tcp Send json data
-        bool TcpSendJson(nlohmann::json& json);
-        // tcp 接收json数据 / tcp Receive json data
-        bool TcpReceiveJson(nlohmann::json& json);
-        // 使用TCP发送cv::Mat / Using tcp send cv::Mat
-        bool TcpSendMat(const cv::Mat& mat);
-        // 使用TCP接收cv::Mat / Using tcp receive cv::Mat
-        bool TcpReceiveMat(cv::Mat& mat);
         // 使用共享内存发送cv::Mat / Using share memory send cv::Mat
         bool ShareMemorySendMat(const cv::Mat& mat);
         // 使用共享内存接收cv::Mat / Using share memory receive cv::Mat

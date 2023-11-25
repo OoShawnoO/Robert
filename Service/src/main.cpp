@@ -9,12 +9,12 @@
 
 #include "Acceptor.h"
 
-int main() {
-    bool stop = false;
-    hzd::Acceptor<hzd::Epoller<hzd::Connection>> acceptor(
-            stop,
-            hzd::Configure::Get("../etc/config.json")
-    );
-    acceptor.Run();
-
-}
+//int main() {
+//    bool stop = false;
+//    hzd::Acceptor<hzd::Epoller<hzd::Connection>> acceptor(
+//            stop,
+//            hzd::Configure::Get("../etc/config.json")
+//    );
+//    acceptor.Run();
+//
+//}
