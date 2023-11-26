@@ -15,11 +15,24 @@ namespace hzd {
     MissionReactor::MissionReactor() {
         analysisFrameCount = 10;
         startTolerance = 0.8;
-        endTolerance = 0.95;
+        endTolerance = 0.9;
         saveResultCount = 8196;
     }
 
-    bool MissionReactor::LoadMission(const std::string &missionFilePath) {
+    bool MissionReactor::LoadMission(
+            const std::string &missionFilePath,
+            int _analysisFrameCount,
+            double _startTolerance,
+            double _endTolerance,
+            int _saveResultCount
+    ) {
+        Clear();
+
+        analysisFrameCount = _analysisFrameCount;
+        startTolerance = _startTolerance;
+        endTolerance = _endTolerance;
+        saveResultCount = _saveResultCount;
+
         std::ifstream in(missionFilePath);
         if(!in.is_open()) {
             LOG_ERROR(MissionReactorChan,"open file failed");
@@ -375,6 +388,7 @@ namespace hzd {
             if(res.status != None) return false;
         }
         res.errorMissions.clear();
+        res.status = Success;
         return true;
     }
 

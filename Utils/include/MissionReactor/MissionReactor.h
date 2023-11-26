@@ -31,9 +31,11 @@ namespace hzd {
         };
 
         enum ResStatus {
-            None,
-            Timeout,
-            NotSuccess,
+            None = 0,
+            Success = 1,
+            Stop = 2,
+            Timeout = 3,
+            NotSuccess = 4,
         };
 
         struct Res {
@@ -57,7 +59,13 @@ namespace hzd {
         MissionReactor();
         void Clear();
         Res React(const ReactInput& input);
-        bool LoadMission(const std::string& missionFilePath);
+        bool LoadMission(
+                const std::string& missionFilePath,
+                int _analysisFrameCount = 10,
+                double _startTolerance = 0.8,
+                double _endTolerance = 0.9,
+                int _saveResultCount = 8196
+        );
 
     private:
         int                                     fps{};

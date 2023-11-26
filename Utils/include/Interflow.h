@@ -27,8 +27,6 @@ namespace hzd {
         Ack,
         // 开始工作
         Start,
-        // 暂停传输
-        Stop,
         // 切换配置
         Change,
         // Interflow挥手
@@ -38,10 +36,10 @@ namespace hzd {
     enum MarkType {
         // 正确接收
         Right,
-        // 图像等待超时
-        MatTimeout,
-        // 结果等待超时
-        ResultTimeout
+        // 暂停
+        Stop,
+        // 超时
+        Timeout
     };
 
     struct ControlPacket {

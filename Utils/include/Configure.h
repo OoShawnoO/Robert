@@ -117,7 +117,8 @@ namespace hzd {
         float                           iouThreshold{0.4};
         // 转换表 / Transport map
         std::unordered_map<int,int>     transport;
-
+        // 身体部位物理大小 / Bodypart hit-box size
+        int                             bodyPartSize{20};
         static std::vector<YoloConfigure> Load(const Configure& configure);
     };
     /**
@@ -145,7 +146,23 @@ namespace hzd {
 
         bool Load(const Configure& configure);
     };
+    /**
+      * @brief MissionReactor相关配置 / MissionReactor configure
+      */
+    struct MissionReactorConfigure {
+        // 二进制任务文件路径 / Binary mission file path
+        std::string                     missionFilePath{};
+        // 分析帧数 / Frame count for analysis
+        int                             analysisFrameCount{10};
+        // 开始结算容忍度 / Start settlement tolerance
+        double                          startTolerance{0.8};
+        // 结束结算容忍度 / End settlement tolerance
+        double                          endTolerance{0.9};
+        // 保存历史结果数量 / Count of saving-result
+        int                             saveResultCount{8192};
 
+        bool Load(const Configure& configure);
+    };
 } // hzd
 
 #endif //UTILS_CONFIGURE_H

@@ -26,45 +26,46 @@ namespace hzd {
     };
     // 身体部位 / Body Part
     struct BodyPart {
+        const int   classId;
         cv::Point   position;
         float       vision;
     };
     // 人体 / Person
     struct Person : Detection {
         // 鼻子 / nose
-        BodyPart    nose{};
+        BodyPart    nose{.classId=0};
         // 左眼 / left eye
-        BodyPart    leftEye{};
+        BodyPart    leftEye{.classId=1};
         // 右眼 / right eye
-        BodyPart    rightEye{};
+        BodyPart    rightEye{.classId=2};
         // 左耳 / left ear
-        BodyPart    leftEar{};
+        BodyPart    leftEar{.classId=3};
         // 右耳 / right ear
-        BodyPart    rightEar{};
+        BodyPart    rightEar{.classId=4};
         // 左肩 / left shoulder
-        BodyPart    leftShoulder{};
+        BodyPart    leftShoulder{.classId=5};
         // 右肩 / right shoulder
-        BodyPart    rightShoulder{};
+        BodyPart    rightShoulder{.classId=6};
         // 左肘 / left elbow
-        BodyPart    leftElbow{};
+        BodyPart    leftElbow{.classId=7};
         // 右肘 / right elbow
-        BodyPart    rightElbow{};
+        BodyPart    rightElbow{.classId=8};
         // 左手腕 / left wrist
-        BodyPart    leftWrist{};
+        BodyPart    leftWrist{.classId=9};
         // 右手腕 / right wrist
-        BodyPart    rightWrist{};
+        BodyPart    rightWrist{.classId=10};
         // 左臀 / left hip
-        BodyPart    leftHip{};
+        BodyPart    leftHip{.classId=11};
         // 右臀 / right hip
-        BodyPart    rightHip{};
+        BodyPart    rightHip{.classId=12};
         // 左膝 / left knee
-        BodyPart    leftKnee{};
+        BodyPart    leftKnee{.classId=13};
         // 右膝 / right knee
-        BodyPart    rightKnee{};
+        BodyPart    rightKnee{.classId=14};
         // 左踝关节 / left ankle
-        BodyPart    leftAnkle{};
+        BodyPart    leftAnkle{.classId=15};
         // 右踝关节 / right ankle
-        BodyPart    rightAnkle{};
+        BodyPart    rightAnkle{.classId=16};
     };
 
     class Yolo {

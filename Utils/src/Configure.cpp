@@ -81,6 +81,7 @@ namespace hzd {
             yoloConf.size = {yolo["size"][0],yolo["size"][1]};
             yoloConf.confThreshold = yolo["confThreshold"];
             yoloConf.iouThreshold = yolo["iouThreshold"];
+            yoloConf.bodyPartSize = yolo["bodyPartSize"];
             auto _transport = yolo["transport"];
             for(auto item = _transport.begin();item != _transport.end(); item++)
             {
@@ -120,6 +121,19 @@ namespace hzd {
             for(const auto& allowItem : conf["Server"]["allow"]) allow.emplace_back(allowItem);
             for(const auto& denyItem : conf["Server"]["deny"]) deny.emplace_back(denyItem);
         }catch(...) {
+            return false;
+        }
+        return true;
+    }
+
+    bool MissionReactorConfigure::Load(const Configure &conf) {
+        try {
+            missionFilePath = conf["MissionReactor"]["missionFilePath"];
+            analysisFrameCount = conf["MissionReactor"]["analysisFrameCount"];
+            startTolerance = conf["MissionReactor"]["startTolerance"];
+            endTolerance = conf["MissionReactor"]["endTolerance"];
+            saveResultCount = conf["MissionReactor"]["saveResultCount"];
+        }catch(...){
             return false;
         }
         return true;
