@@ -11,11 +11,15 @@
 
 #include "HomePage.h"
 #include "ui_HomePage.h"
+#include "SolutionItem.h"
 
 namespace hzd {
     HomePage::HomePage(QWidget *parent) :
             QWidget(parent), ui(new Ui::HomePage) {
         ui->setupUi(this);
+        ui->solutions->addWidget(new SolutionItem);
+        ui->solutions->addWidget(new SolutionItem);
+        ui->solutions->addWidget(new SolutionItem);
     }
 
     HomePage::~HomePage() {

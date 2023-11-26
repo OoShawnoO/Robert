@@ -10,11 +10,14 @@
 #include <QWidget>
 #include <QApplication>
 #include <QPushButton>
+#include <QListWidget>
+#include <QVBoxLayout>
 #include "SolutionItem.h"
+#include "HomePage.h"
 
 int main(int argc,char* argv[]) {
     QApplication application(argc,argv);
-    hzd::SolutionItem item;
-    item.show();
+    hzd::HomePage homePage;
+    homePage.show();
     return QApplication::exec();
 }

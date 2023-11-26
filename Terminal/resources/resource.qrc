@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="resource">
+    <file>start.svg</file>
+    <file>startActive.svg</file>
     <file>solution.svg</file>
     <file>editConfigActive.svg</file>
     <file>editMissionActive.svg</file>
