@@ -1,5 +1,8 @@
 <RCC>
   <qresource prefix="resource">
+    <file>create.svg</file>
+    <file>success.svg</file>
+    <file>failed.svg</file>
     <file>start.svg</file>
     <file>startActive.svg</file>
     <file>solution.svg</file>
