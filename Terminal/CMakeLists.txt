@@ -21,8 +21,11 @@ file(GLOB_RECURSE SRCS src/*.cpp)
 file(GLOB_RECURSE UIS ui/*.ui)
 file(GLOB_RECURSE RES resources/*.qrc)
 
+# Third Party
+find_package(OpenCV REQUIRED)
 
 # Include
+include_directories(${OPENCV_INCLUDES})
 include_directories(include)
 include_directories(../Utils/include)
 # Library
@@ -36,4 +39,5 @@ add_executable(${TARGET} ${HEADERS} ${SRCS} ${UIS} ${RES})
 target_link_libraries(
         ${TARGET}
         Qt5::Core Qt5::Gui Qt5::Widgets
+        ${OpenCV_LIBS}
 )

@@ -11,6 +11,7 @@
 #define ROBERT_HOMEPAGE_H
 
 #include <QWidget>
+#include "SolutionItem.h"
 
 namespace hzd {
     QT_BEGIN_NAMESPACE
@@ -19,34 +20,15 @@ namespace hzd {
 
     class HomePage : public QWidget {
     Q_OBJECT
-        enum Direction {
-            NONE,BOTTOMRIGHT,TOPRIGHT,TOPLEFT,BOTTOMLEFT,RIGHT,DOWN,LEFT,UP
-        };
     public:
         explicit HomePage(QWidget *parent = nullptr);
 
         ~HomePage() override;
 
-        bool event(QEvent* event);
-        void mousePressEvent(QMouseEvent* event);
-        void mouseMoveEvent(QMouseEvent* event);
-        void updateRegion(QMouseEvent* event);
-        void resizeRegion(int marginTop,int marginBottom,
-                          int marginLeft,int marginRight);
-        void mouseReleaseEvent(QMouseEvent* event);
-        void leaveEvent(QEvent* event);
-        void createShadow();
-        void maxmizeWidget();
-        void restoreWidget();
-
     private:
         Ui::HomePage *ui;
-        bool m_bIsPressed;
-        QPoint m_pressPoint;
-        QPoint m_movePoint;
-        bool m_bIsDoublePressed;
-        bool m_bIsResizing;
-        Direction m_direction;
+        int solutionIndex{0};
+        std::unordered_map<int,SolutionItem*> solutionMap;
     };
 } // hzd
 

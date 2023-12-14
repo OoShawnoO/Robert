@@ -17,7 +17,7 @@
    <string>ConfigPage</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-color:rgb(50,50,50);
+   <string notr="true">background-color:rgb(39,39,39);
 color:white;
 font-size:20px;
 
@@ -41,11 +41,62 @@ QCheckBox::indicator:checked:hover {
     background-color: rgb(170, 255, 0); 
 } </string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_8">
+  <layout class="QVBoxLayout" name="verticalLayout_9">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_14">
+    <layout class="QHBoxLayout" name="horizontalLayout_17">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_7">
+      <layout class="QVBoxLayout" name="verticalLayout_8">
+       <item>
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>方案</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_14">
+            <item>
+             <widget class="QLabel" name="label_13">
+              <property name="text">
+               <string>名称:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="nameEdit">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_16">
+            <item>
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>简介:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="descEdit">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
@@ -62,7 +113,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit">
+             <widget class="QLineEdit" name="logEdit">
               <property name="text">
                <string>log</string>
               </property>
@@ -92,7 +143,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_2">
+             <widget class="QLineEdit" name="ipEdit">
               <property name="text">
                <string>127.0.0.1</string>
               </property>
@@ -113,7 +164,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_3">
+             <widget class="QLineEdit" name="portEdit">
               <property name="text">
                <string>9999</string>
               </property>
@@ -134,7 +185,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_4">
+             <widget class="QLineEdit" name="epollEdit">
               <property name="text">
                <string>0</string>
               </property>
@@ -155,7 +206,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_5">
+             <widget class="QLineEdit" name="reactorEdit">
               <property name="text">
                <string>1</string>
               </property>
@@ -167,7 +218,7 @@ QCheckBox::indicator:checked:hover {
            </layout>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox">
+           <widget class="QCheckBox" name="etCheckBox">
             <property name="text">
              <string>是否开启边缘触发</string>
             </property>
@@ -180,7 +231,7 @@ QCheckBox::indicator:checked:hover {
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_2">
+           <widget class="QCheckBox" name="oneshotCheckBox">
             <property name="text">
              <string>是否开启oneshot</string>
             </property>
@@ -208,10 +259,10 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_20"/>
+             <widget class="QLineEdit" name="fileEdit"/>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_3">
+             <widget class="QPushButton" name="selectFile">
               <property name="text">
                <string>选择文件</string>
               </property>
@@ -229,7 +280,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_21">
+             <widget class="QLineEdit" name="analysisEdit">
               <property name="text">
                <string>10</string>
               </property>
@@ -250,7 +301,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_22">
+             <widget class="QLineEdit" name="startEdit">
               <property name="text">
                <string>0.8</string>
               </property>
@@ -271,7 +322,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_23">
+             <widget class="QLineEdit" name="endEdit">
               <property name="text">
                <string>0.8</string>
               </property>
@@ -296,7 +347,7 @@ QCheckBox::indicator:checked:hover {
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QCheckBox" name="checkBox_3">
+           <widget class="QCheckBox" name="producerCheckBox">
             <property name="text">
              <string>是否为服务器端</string>
             </property>
@@ -306,7 +357,7 @@ QCheckBox::indicator:checked:hover {
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_4">
+           <widget class="QCheckBox" name="tcpCheckBox">
             <property name="text">
              <string>是否使用TCP</string>
             </property>
@@ -325,7 +376,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_6">
+             <widget class="QLineEdit" name="shareEdit">
               <property name="text">
                <string>share</string>
               </property>
@@ -346,7 +397,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_7">
+             <widget class="QLineEdit" name="producerEdit">
               <property name="text">
                <string>producer</string>
               </property>
@@ -367,7 +418,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_8">
+             <widget class="QLineEdit" name="consumerEdit">
               <property name="text">
                <string>consumer</string>
               </property>
@@ -388,7 +439,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_9">
+             <widget class="QLineEdit" name="myIpEdit">
               <property name="text">
                <string>127.0.0.1</string>
               </property>
@@ -409,7 +460,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_10">
+             <widget class="QLineEdit" name="myPortEdit">
               <property name="text">
                <string>9999</string>
               </property>
@@ -430,7 +481,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_11"/>
+             <widget class="QLineEdit" name="destIpEdit"/>
             </item>
            </layout>
           </item>
@@ -444,7 +495,7 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="lineEdit_12"/>
+             <widget class="QLineEdit" name="destPortEdit"/>
             </item>
            </layout>
           </item>
@@ -458,19 +509,19 @@ QCheckBox::indicator:checked:hover {
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="QListWidget" name="listWidget"/>
+           <widget class="QListWidget" name="modelList"/>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_13">
             <item>
-             <widget class="QPushButton" name="pushButton">
+             <widget class="QPushButton" name="newModel">
               <property name="text">
                <string>新建</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_2">
+             <widget class="QPushButton" name="deleteModel">
               <property name="text">
                <string>删除</string>
               </property>
@@ -501,7 +552,7 @@ QCheckBox::indicator:checked:hover {
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_4">
+      <widget class="QPushButton" name="finish">
        <property name="text">
         <string>完成</string>
        </property>
@@ -521,7 +572,7 @@ QCheckBox::indicator:checked:hover {
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_5">
+      <widget class="QPushButton" name="cancel">
        <property name="text">
         <string>取消</string>
        </property>

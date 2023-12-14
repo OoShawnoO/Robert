@@ -11,6 +11,7 @@
 #define ROBERT_CONFIGPAGE_H
 
 #include <QWidget>
+#include <Configure.h>
 
 namespace hzd {
     QT_BEGIN_NAMESPACE
@@ -21,11 +22,17 @@ namespace hzd {
     Q_OBJECT
 
     public:
-        explicit ConfigPage(QWidget *parent = nullptr);
+        explicit ConfigPage(
+                QWidget *parent = nullptr,
+                ConfigurePackage *configurePackage = nullptr
+        );
 
         ~ConfigPage() override;
-
+        signals:
+        void finish();
     private:
+        ConfigurePackage* configurePackage{nullptr};
+        std::vector<YoloConfigure> tempYoloConfigures;
         Ui::ConfigPage *ui;
     };
 } // hzd

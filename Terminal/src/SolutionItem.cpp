@@ -13,12 +13,42 @@
 #include "ui_SolutionItem.h"
 
 namespace hzd {
-    SolutionItem::SolutionItem(QWidget *parent) :
-            QWidget(parent), ui(new Ui::SolutionItem) {
+    SolutionItem::SolutionItem(QWidget *parent,int _id) :
+            QWidget(parent), ui(new Ui::SolutionItem),id(_id) {
         ui->setupUi(this);
+
+        connect(
+            ui->editConfig,
+            &QPushButton::clicked,
+            this,
+            [&]{
+                emit editConfigSignal();
+            }
+        );
+        connect(
+                ui->editMission,
+                &QPushButton::clicked,
+                this,
+                [&]{
+                    emit editMissionSignal();
+                }
+        );
+        connect(
+                ui->start,
+                &QPushButton::clicked,
+                this,
+                [&]{
+                    emit runSignal();
+                }
+        );
     }
 
     SolutionItem::~SolutionItem() {
         delete ui;
+    }
+
+    void SolutionItem::updateUI() {
+        ui->title->setText(configurePackage.name.c_str());
+        ui->description->setText(configurePackage.description.c_str());
     }
 } // hzd

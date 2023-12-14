@@ -11,6 +11,7 @@
 #define ROBERT_SOLUTIONITEM_H
 
 #include <QWidget>
+#include "Configure.h"
 
 namespace hzd {
     QT_BEGIN_NAMESPACE
@@ -21,10 +22,17 @@ namespace hzd {
     Q_OBJECT
 
     public:
-        explicit SolutionItem(QWidget *parent = nullptr);
-
+        explicit SolutionItem(QWidget *parent = nullptr,int id = 0);
+        int id{0};
         ~SolutionItem() override;
-
+        ConfigurePackage configurePackage;
+        signals:
+        void editConfigSignal();
+        void editMissionSignal();
+        void runSignal();
+        void deleteSignal();
+    public slots:
+        void updateUI();
     private:
         Ui::SolutionItem *ui;
     };

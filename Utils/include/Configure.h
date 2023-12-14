@@ -99,6 +99,8 @@ namespace hzd {
      * @brief Yolo相关配置 / Yolo configure
      */
     struct YoloConfigure {
+        // 名称 / Name
+        std::string                     name{};
         // 权重文件路径 / Weight file path
         std::string                     weightFilePath{};
         // 是否为yolo-pose / Whether yolo-pose or not
@@ -163,6 +165,19 @@ namespace hzd {
 
         bool Load(const Configure& configure);
     };
+
+    /**
+     * @brief Package of all configure part
+     */
+     struct ConfigurePackage {
+         std::string                    name{"新方案"};
+         std::string                    description{"新方案"};
+         ServerConfigure                serverConfigure{};
+         LogConfigure                   logConfigure{};
+         std::vector<YoloConfigure>     yoloConfigures{};
+         InterflowConfigure             interflowConfigure{};
+         MissionReactorConfigure        missionReactorConfigure{};
+     };
 } // hzd
 
 #endif //UTILS_CONFIGURE_H
