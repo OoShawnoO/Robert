@@ -1,13 +1,54 @@
 {
-  "Server" : {
-    "ip": "127.0.0.1",
-    "port": 9999,
-    "epollTimeout": 0,
-    "reactorCount": 1,
-    "isEdgeTrigger": false,
-    "isOneshot": true,
-    "isNonblock": false,
+  "Interflow": {
+    "consumerSemKey": "",
+    "destIpAddr": "",
+    "destPort": 0,
+    "isProducer": false,
+    "isTcp": true,
+    "myIpAddr": "",
+    "myPort": 0,
+    "producerSemKey": "",
+    "shareKey": ""
+  },
+  "Log": {
+    "channel": null,
+    "path": ""
+  },
+  "MissionReactor": {
+    "analysisFrameCount": 10,
+    "endTolerance": 0.9,
+    "missionFilePath": "",
+    "saveResultCount": 8192,
+    "startTolerance": 0.8
+  },
+  "Server": {
     "allow": [],
-    "deny": []
-  }
+    "deny": [],
+    "epollTimeout": 0,
+    "ip": "",
+    "isEdgeTrigger": false,
+    "isNonblock": true,
+    "isOneShot": true,
+    "port": 0,
+    "reactorCount": 1
+  },
+  "Yolo": [
+    {
+      "bodyPartSize": 20,
+      "confThreshold": 0.4000000059604645,
+      "cuda": false,
+      "deviceId": 0,
+      "iouThreshold": 0.4000000059604645,
+      "isPose": false,
+      "size": [
+        640,
+        640
+      ],
+      "transport": {
+        "2": 3
+      },
+      "version": 8,
+      "weightFilePath": "/mnt/d/Projects/C++/ALLINONE/InferenceEngine/onnx/bag.onnx"
+    }
+  ]
 }

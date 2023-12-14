@@ -186,5 +186,7 @@ namespace hzd {
                 out.write((const char*)&endDuration,sizeof(int));
             }
         }
+
+        return true;
     }
 } // hzd

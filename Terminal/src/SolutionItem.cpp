@@ -41,6 +41,14 @@ namespace hzd {
                     emit runSignal();
                 }
         );
+        connect(
+          ui->deleteItem,
+          &QPushButton::clicked,
+          this,
+          [&]{
+              emit deleteSignal();
+          }
+        );
     }
 
     SolutionItem::~SolutionItem() {

@@ -13,16 +13,14 @@
 #include <QMouseEvent>
 #include <QDesktopWidget>
 #include <QGraphicsDropShadowEffect>
+#include <dirent.h>
+#include <iostream>
 #include "HomePage.h"
 #include "ui_HomePage.h"
 #include "SolutionItem.h"
 #include "ConfigPage.h"
-#include "YoloConfigPage.h"
 
 namespace hzd {
-#define MARGIN_MIN_SIZE 0
-#define MARGIN_MAX_SIZE 20
-
 
     void AddTableItem(QTableWidget* table,const QString& time,const QString& procedure,bool isSuccess,const QString& reason = "") {
         table->insertRow(0);
@@ -122,35 +120,89 @@ namespace hzd {
                "      }");
     /* endregion */
 
+        DIR    *dir;
+        struct    dirent    *ptr;
+        dir = opendir(".");
+        while((ptr = readdir(dir)) != NULL)
+        {
+            std::string fileName = ptr->d_name;
+            if((fileName.size() > 5 ? fileName.substr(fileName.size()-5) : "") == ".json"){
+                AddSolution(fileName);
+            }
+        }
+        closedir(dir);
+
+        // 添加方案
         connect(
           ui->addSolution,
           &QPushButton::clicked,
           this,
-          [&]{
-            auto* solution = new SolutionItem(nullptr,solutionIndex);
-            solutionMap[solutionIndex] = solution;
-            ui->solutions->insertWidget(0,solution);
-            connect(
-              solution,
-              &SolutionItem::editConfigSignal,
-              this,
-              [=] {
-                  auto* configPage = new ConfigPage(nullptr,&solution->configurePackage);
-                  connect(
-                    configPage,
-                    &ConfigPage::finish,
-                    solution,
-                    &SolutionItem::updateUI
-                  );
-                  configPage->show();
-              }
-            );
-            solutionIndex++;
+          [&] {
+              AddSolution();
           }
         );
     }
 
     HomePage::~HomePage() {
         delete ui;
+        for(auto& solution : solutionMap) {
+            solution.second->configurePackage.Serialize(solution.second->configurePackage.name + ".json");
+        }
+    }
+
+    void HomePage::AddSolution(const std::string& path) {
+        auto* solution = new SolutionItem(nullptr,solutionIndex);
+        solutionMap[solutionIndex] = solution;
+        if(!path.empty()){
+            if(!solution->configurePackage.Deserialize(path)) return;
+            solution->updateUI();
+            remove(path.c_str());
+        }
+        ui->solutions->insertWidget(0,solution);
+        // 编辑配置
+        connect(
+                solution,
+                &SolutionItem::editConfigSignal,
+                this,
+                [=] {
+                    auto* configPage = new ConfigPage(nullptr,&solution->configurePackage);
+                    connect(
+                            configPage,
+                            &ConfigPage::finish,
+                            solution,
+                            &SolutionItem::updateUI
+                    );
+                    configPage->show();
+                }
+        );
+        // 编辑任务
+        connect(
+                solution,
+                &SolutionItem::editMissionSignal,
+                this,
+                [=]{
+
+                }
+        );
+        // 运行
+        connect(
+                solution,
+                &SolutionItem::runSignal,
+                this,
+                [=]{
+
+                }
+        );
+        connect(
+          solution,
+          &SolutionItem::deleteSignal,
+          this,
+          [=]{
+              solutionMap[solution->id]->hide();
+              solutionMap.erase(solution->id);
+              ui->solutions->update();
+          }
+        );
+        solutionIndex++;
     }
 } // hzd

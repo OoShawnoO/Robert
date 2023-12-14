@@ -71,6 +71,10 @@ namespace hzd {
             ui->destIpEdit->setText(interflowConfigure.destIpAddr.c_str());
             ui->destPortEdit->setText(std::to_string(interflowConfigure.destPort).c_str());
             tempYoloConfigures = yoloConfigures;
+
+            for(const auto& yoloConfigure : tempYoloConfigures) {
+                ui->modelList->addItem(yoloConfigure.name.c_str());
+            }
         }
 
         // 完成按钮

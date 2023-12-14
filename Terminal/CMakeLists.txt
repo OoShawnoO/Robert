@@ -18,6 +18,7 @@ set(CMAKE_AUTORCC ON)
 
 file(GLOB_RECURSE HEADERS include/*.h)
 file(GLOB_RECURSE SRCS src/*.cpp)
+file(GLOB_RECURSE UTILS_SRCS ../Utils/src/Configure.cpp)
 file(GLOB_RECURSE UIS ui/*.ui)
 file(GLOB_RECURSE RES resources/*.qrc)
 
@@ -32,9 +33,9 @@ include_directories(../Utils/include)
 link_directories(lib)
 link_directories(../Utils/lib)
 # Binary Output Path
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 # Add Executable
-add_executable(${TARGET} ${HEADERS} ${SRCS} ${UIS} ${RES})
+add_executable(${TARGET} ${HEADERS} ${SRCS} ${UTILS_SRCS} ${UIS} ${RES})
 # Link Libraries
 target_link_libraries(
         ${TARGET}

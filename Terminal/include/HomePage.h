@@ -24,7 +24,7 @@ namespace hzd {
         explicit HomePage(QWidget *parent = nullptr);
 
         ~HomePage() override;
-
+        void AddSolution(const std::string& path = "");
     private:
         Ui::HomePage *ui;
         int solutionIndex{0};

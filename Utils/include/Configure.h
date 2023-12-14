@@ -29,7 +29,7 @@ namespace hzd {
          * @brief 全局单例配置文件 / Get global single configure object
          * @retval reference of single configure object
          */
-        static Configure& Get(const std::string& filePath = "");
+        static Configure& Get(const std::string& filePath = "../etc/config.json");
 
         /**
           * @brief 获取配置文件中的键名 / Get configure file's keys
@@ -177,6 +177,9 @@ namespace hzd {
          std::vector<YoloConfigure>     yoloConfigures{};
          InterflowConfigure             interflowConfigure{};
          MissionReactorConfigure        missionReactorConfigure{};
+
+         bool Deserialize(const std::string& path);
+         void Serialize(const std::string& path);
      };
 } // hzd
 
