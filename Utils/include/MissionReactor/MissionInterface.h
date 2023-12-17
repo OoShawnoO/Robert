@@ -47,6 +47,10 @@ namespace hzd {
             explicit Parameter(int32_t _int32) : data(_int32) { type = INT32; }
             explicit Parameter(double _double) : data(_double) { type = DOUBLE; }
 
+            Parameter& operator=(bool _bool) { type = BOOL; data._bool = _bool; return *this;}
+            Parameter& operator=(int32_t _int32) { type = INT32; data._int32 = _int32; return *this;}
+            Parameter& operator=(double  _double) { type = DOUBLE; data._double = _double; return *this;}
+
             inline bool&    asBool()  {
                 assert(type == BOOL);
                 return data._bool;

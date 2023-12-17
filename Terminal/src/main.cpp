@@ -12,7 +12,6 @@
 #include <QPushButton>
 #include <QListWidget>
 #include <QVBoxLayout>
-#include "SolutionItem.h"
 #include "HomePage.h"
 
 int main(int argc,char* argv[]) {

@@ -19,6 +19,7 @@
 #include "ui_HomePage.h"
 #include "SolutionItem.h"
 #include "ConfigPage.h"
+#include "Editor.h"
 
 namespace hzd {
 
@@ -181,7 +182,8 @@ namespace hzd {
                 &SolutionItem::editMissionSignal,
                 this,
                 [=]{
-
+                    auto editor = new Editor;
+                    editor->show();
                 }
         );
         // 运行
