@@ -12,6 +12,7 @@
 
 #include <DataFlowGraphicsScene>
 #include <MissionReactor/MissionPacker.h>
+#include "SolutionItem.h"
 
 using QtNodes::DataFlowGraphModel;
 using QtNodes::DataFlowGraphicsScene;
@@ -22,10 +23,11 @@ namespace hzd {
     class Scene : public DataFlowGraphicsScene {
     Q_OBJECT
     public:
-        explicit Scene(DataFlowGraphModel& graphModel,QObject* parent = nullptr);
-
+        explicit Scene(DataFlowGraphModel& graphModel,SolutionItem& solutionItem,QObject* parent = nullptr);
         ~Scene() override;
         static std::shared_ptr<NodeDelegateModelRegistry> registerDataModels();
+        static bool Generate(const std::string& fileName);
+        static bool Generate(const QJsonObject& jsonObject,const std::string& name);
         static bool GenerateItem(MissionPacker& packer,QJsonObject& objectJson);
         static bool GeneratePose(MissionPacker& packer,QJsonObject& objectJson);
         static bool GenerateSettlement(MissionPacker& packer,QJsonObject& objectJson);
@@ -33,25 +35,15 @@ namespace hzd {
         static bool GenerateContactMission(MissionPacker& packer,QJsonObject& objectJson);
         static bool GenerateDistanceMission(MissionPacker& packer,QJsonObject& objectJson);
         static bool GenerateDirectedDistanceMission(MissionPacker& packer,QJsonObject& objectJson);
-
     public slots:
+        void Load();
+        void Save();
         void SaveAndGenerate();
 
     private:
-        std::unordered_map<
-            std::string,
-            std::function<bool(MissionPacker&,QJsonObject&)>
-        > generateMap{
-                {"结算器", GenerateSettlement},
-                {"重要组件", GenerateItem},
-                {"停留事件", GenerateStayMission},
-                {"接触事件", GenerateContactMission},
-                {"人体部位", GeneratePose},
-                {"距离事件", GenerateDistanceMission},
-                {"定向距离事件", GenerateDirectedDistanceMission}
-        };
-        bool Generate(const std::string& fileName);
-
+        SolutionItem& solutionItem;
+        void SaveJson(QJsonObject& jsonObject);
+        void LoadJson(QJsonObject& jsonObject);
     };
 
 } // hzd

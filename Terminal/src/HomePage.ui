@@ -381,7 +381,7 @@ color:rgb(255,255,255);</string>
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0">
        <item>
-        <widget class="QOpenGLWidget" name="openGLWidget">
+        <widget class="VideoWidget" name="videoWidget">
          <property name="minimumSize">
           <size>
            <width>1280</width>
@@ -464,6 +464,13 @@ color:rgb(255,255,255);</string>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>VideoWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>VideoWidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../resources/resource.qrc"/>
  </resources>

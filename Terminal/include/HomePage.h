@@ -12,6 +12,7 @@
 
 #include <QWidget>
 #include "SolutionItem.h"
+#include "Editor.h"
 
 namespace hzd {
     QT_BEGIN_NAMESPACE

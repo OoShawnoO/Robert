@@ -35,9 +35,8 @@ namespace hzd {
 
     QJsonObject SettlementModel::save() const {
         auto modelJson =  BaseModel::save();
-        if(!broadcaster.isSerialized) {
-            broadcaster.Serialize(modelJson);
-        }
+        broadcaster.Serialize(modelJson);
+
         modelJson["开始结算事件"] = startCombo.GetCurrentText().c_str();
         modelJson["结束结算事件"] = endCombo.GetCurrentText().c_str();
         modelJson["开始参考时间"] = startDuration.GetEditText().c_str();

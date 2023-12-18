@@ -11,6 +11,7 @@
 #include <QDir>
 #include <QJsonArray>
 #include <QMessageBox>
+#include <utility>
 #include "Scene.h"
 #include "ItemModel.h"
 #include "PoseModel.h"
@@ -23,8 +24,21 @@
 namespace hzd {
     using Parameter = MissionInterface::Parameter;
 
-    Scene::Scene(DataFlowGraphModel &graphModel, QObject *parent) : DataFlowGraphicsScene(graphModel, parent) {
+    static std::unordered_map<
+            std::string,
+            std::function<bool(MissionPacker&,QJsonObject&)>
+    > generateMap{
+            {"结算器", Scene::GenerateSettlement},
+            {"重要组件", Scene::GenerateItem},
+            {"停留事件", Scene::GenerateStayMission},
+            {"接触事件", Scene::GenerateContactMission},
+            {"人体部位", Scene::GeneratePose},
+            {"距离事件", Scene::GenerateDistanceMission},
+            {"指定方向距离事件", Scene::GenerateDirectedDistanceMission}
+    };
 
+    Scene::Scene(DataFlowGraphModel &graphModel,SolutionItem& _solutionItem, QObject *parent)
+    : solutionItem(_solutionItem), DataFlowGraphicsScene(graphModel, parent) {
     }
 
     Scene::~Scene() = default;
@@ -44,11 +58,13 @@ namespace hzd {
     bool Scene::GenerateItem(MissionPacker &packer, QJsonObject &objectJson) {
         auto object =objectJson["internal-data"].toObject();
         packer.WriteItem(object["名称"].toString().toStdString(),object["ID"].toString().toInt());
+        return true;
     }
 
     bool Scene::GeneratePose(MissionPacker &packer, QJsonObject &objectJson) {
         auto object = objectJson["internal-data"].toObject();
         packer.WriteItem(object["名称"].toString().toStdString(),object["ID"].toString().toInt());
+        return true;
     }
 
     bool Scene::GenerateSettlement(MissionPacker &packer, QJsonObject &objectJson) {
@@ -89,6 +105,7 @@ namespace hzd {
             };
         }
         packer.WriteSettlement(start,end,{startItem},{endItem},startBoundItem,endBoundItem,startDuration,endDuration);
+        return true;
     }
 
     bool Scene::GenerateStayMission(MissionPacker &packer, QJsonObject &objectJson) {
@@ -101,7 +118,7 @@ namespace hzd {
         parameters[1] = endSignals.size();
         parameters[2] = BaseModel::broadcaster.At(object["组件A"].toString().toStdString());
         parameters[3] = BaseModel::broadcaster.At(object["组件B"].toString().toStdString());
-        parameters[4] = object["参考时间"].toInt();
+        parameters[4] = object["参考时间"].toString().toInt();
         auto list = object["边界"].toString().split(' ');
         if(list.size() != 4){
             QMessageBox::critical(nullptr,"错误","边界应该为x y w h格式书写");
@@ -132,7 +149,7 @@ namespace hzd {
         parameters[1] = endSignals.size();
         parameters[2] = BaseModel::broadcaster.At(object["组件A"].toString().toStdString());
         parameters[3] = BaseModel::broadcaster.At(object["组件B"].toString().toStdString());
-        parameters[4] = object["参考时间"].toInt();
+        parameters[4] = object["参考时间"].toString().toInt();
         auto list = object["边界"].toString().split(' ');
         if(list.size() != 4){
             QMessageBox::critical(nullptr,"错误","边界应该为x y w h格式书写");
@@ -163,7 +180,7 @@ namespace hzd {
         parameters[1] = endSignals.size();
         parameters[2] = BaseModel::broadcaster.At(object["组件A"].toString().toStdString());
         parameters[3] = BaseModel::broadcaster.At(object["组件B"].toString().toStdString());
-        parameters[4] = object["参考时间"].toInt();
+        parameters[4] = object["参考时间"].toString().toInt();
         auto list = object["边界"].toString().split(' ');
         if(list.size() != 4){
             QMessageBox::critical(nullptr,"错误","边界应该为x y w h格式书写");
@@ -174,15 +191,15 @@ namespace hzd {
         parameters[7] = list[2].toInt();
         parameters[8] = list[3].toInt();
         parameters[9] = object["任意个体"] == "是";
-        parameters[10] = object["最小距离权值"].toDouble();
-        parameters[11] = object["最大距离权值"].toDouble();
+        parameters[10] = object["最小距离权值"].toString().toDouble();
+        parameters[11] = object["最大距离权值"].toString().toDouble();
         for(const auto& startSignal : startSignals) {
             parameters.push_back(Parameter(startSignal.toInt()));
         }
         for(const auto& endSignal : endSignals) {
             parameters.push_back(Parameter(endSignal.toInt()));
         }
-        packer.WriteFunction("停留事件",parameters);
+        packer.WriteFunction("距离事件",parameters);
         return true;
     }
 
@@ -198,7 +215,7 @@ namespace hzd {
         parameters[1] = endSignals.size();
         parameters[2] = BaseModel::broadcaster.At(object["组件A"].toString().toStdString());
         parameters[3] = BaseModel::broadcaster.At(object["组件B"].toString().toStdString());
-        parameters[4] = object["参考时间"].toInt();
+        parameters[4] = object["参考时间"].toString().toInt();
         auto list = object["边界"].toString().split(' ');
         if(list.size() != 4){
             QMessageBox::critical(nullptr,"错误","边界应该为x y w h格式书写");
@@ -209,8 +226,8 @@ namespace hzd {
         parameters[7] = list[2].toInt();
         parameters[8] = list[3].toInt();
         parameters[9] = object["任意个体"] == "是";
-        parameters[10] = object["最小距离权值"].toDouble();
-        parameters[11] = object["最大距离权值"].toDouble();
+        parameters[10] = object["最小距离权值"].toString().toDouble();
+        parameters[11] = object["最大距离权值"].toString().toDouble();
         parameters[12] = vectorA[0].toInt();
         parameters[13] = vectorA[1].toInt();
         parameters[14] = vectorB[0].toInt();
@@ -221,29 +238,64 @@ namespace hzd {
         for(const auto& endSignal : endSignals) {
             parameters.push_back(Parameter(endSignal.toInt()));
         }
-        packer.WriteFunction("停留事件",parameters);
+        packer.WriteFunction("指定方向距离事件",parameters);
         return true;
     }
 
+    void Scene::Save() {
+        auto json = QJsonDocument(_graphModel.save()).toJson();
+        if(!json.contains("结算器")){
+            QMessageBox::critical(nullptr,"错误","flow文件中至少要有一个结算器组件");
+            return;
+        }
+        SaveJson(solutionItem.editorFlowJson);
+    }
+
     void Scene::SaveAndGenerate() {
-        QString fileName = QFileDialog::getSaveFileName(
+        auto json = QJsonDocument(_graphModel.save()).toJson();
+        if(!json.contains("结算器")){
+            QMessageBox::critical(nullptr,"错误","flow文件中至少要有一个结算器组件");
+            return;
+        }
+
+        QString _fileName = QFileDialog::getSaveFileName(
                 nullptr,
                 tr("Open Flow Scene"),
                 QDir::homePath(),
                 tr("Flow Scene Files (*.flow)")
         );
 
-        if (!fileName.isEmpty()) {
-            if (!fileName.endsWith("flow", Qt::CaseInsensitive))
-                fileName += ".flow";
+        if (!_fileName.isEmpty()) {
+            if (!_fileName.endsWith("flow", Qt::CaseInsensitive))
+                _fileName += ".flow";
 
-            QFile file(fileName);
+            QFile file(_fileName);
             if (file.open(QIODevice::WriteOnly)) {
-                file.write(QJsonDocument(_graphModel.save()).toJson());
+                file.write(json);
             }
             file.close();
         }
-        Generate(fileName.toStdString());
+        Generate(_fileName.toStdString());
+    }
+
+    bool Scene::Generate(const QJsonObject &jsonObject,const std::string& name) {
+        MissionPacker packer(name + ".mission");
+        QJsonArray nodeArray = jsonObject["nodes"].toArray();
+        for(const auto node : nodeArray){
+            auto internalData = node.toObject()["internal-data"].toObject();
+            QString modelName = internalData["model-name"].toString();
+            auto n = node.toObject();
+            auto name = modelName.toStdString();
+            if(name == "结算器") GenerateSettlement(packer,n);
+            else if(name == "重要组件") GenerateItem(packer,n);
+            else if(name == "停留事件") GenerateStayMission(packer,n);
+            else if(name == "接触事件") GenerateContactMission(packer,n);
+            else if(name == "人体部位") GeneratePose(packer,n);
+            else if(name == "距离事件") GenerateDistanceMission(packer,n);
+            else if(name == "指定方向距离事件") GenerateDirectedDistanceMission(packer,n);
+        }
+        packer.Save();
+        return true;
     }
 
     bool Scene::Generate(const std::string &_fileName) {
@@ -277,4 +329,19 @@ namespace hzd {
         packer.Save();
         return true;
     }
+
+    void Scene::Load() {
+        LoadJson(solutionItem.editorFlowJson);
+    }
+
+    void Scene::LoadJson(QJsonObject &jsonObject) {
+        clearScene();
+        _graphModel.load(jsonObject);
+        Q_EMIT sceneLoaded();
+    }
+
+    void Scene::SaveJson(QJsonObject &jsonObject) {
+        jsonObject = _graphModel.save();
+    }
+
 } // hzd

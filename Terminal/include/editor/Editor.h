@@ -19,6 +19,7 @@
 #include <NodeDelegateModelRegistry>
 
 #include "Scene.h"
+#include "SolutionItem.h"
 
 using QtNodes::ConnectionStyle;
 using QtNodes::DataFlowGraphicsScene;
@@ -35,8 +36,7 @@ namespace hzd {
     Q_OBJECT
 
     public:
-        explicit Editor(QWidget *parent = nullptr);
-
+        explicit Editor(SolutionItem& solutionItem,QWidget *parent = nullptr);
         ~Editor() override;
 
     private:

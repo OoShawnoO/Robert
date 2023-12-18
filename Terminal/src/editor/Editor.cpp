@@ -14,7 +14,7 @@
 #include <QScreen>
 
 namespace hzd {
-    Editor::Editor(QWidget *parent) :
+    Editor::Editor(SolutionItem& solutionItem,QWidget *parent) :
             QMainWindow(parent), ui(new Ui::Editor) {
         ui->setupUi(this);
 
@@ -40,19 +40,19 @@ namespace hzd {
 
         registry = Scene::registerDataModels();
         dataFlowGraphModel = std::make_shared<DataFlowGraphModel>(registry);
-        scene = std::make_shared<Scene>(*dataFlowGraphModel,nullptr);
+        scene = std::make_shared<Scene>(*dataFlowGraphModel,solutionItem,nullptr);
         view = std::make_shared<GraphicsView>(scene.get());
         ui->verticalLayout->addWidget(view.get());
         adjustSize();
 
+        scene->Load();
         connect(ui->loadAction, &QAction::triggered, scene.get(), &DataFlowGraphicsScene::load);
-        connect(ui->saveAction,&QAction::triggered,scene.get(),&Scene::SaveAndGenerate);
+        connect(ui->saveAnotherAction,&QAction::triggered,scene.get(),&Scene::SaveAndGenerate);
+        connect(ui->saveAction,&QAction::triggered,scene.get(),&Scene::Save);
         connect(scene.get(), &DataFlowGraphicsScene::sceneLoaded, view.get(), &GraphicsView::centerScene);
 
         this->move(QApplication::primaryScreen()->availableGeometry().center()
-                        - this->rect().center());
-        this->showNormal();
-
+                   - this->rect().center());
     }
 
     Editor::~Editor() {

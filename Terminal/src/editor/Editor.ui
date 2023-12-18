@@ -55,6 +55,7 @@
      <string>模型</string>
     </property>
     <addaction name="loadAction"/>
+    <addaction name="saveAnotherAction"/>
     <addaction name="saveAction"/>
    </widget>
    <addaction name="menu"/>
@@ -64,9 +65,14 @@
     <string>加载模型...</string>
    </property>
   </action>
+  <action name="saveAnotherAction">
+   <property name="text">
+    <string>另存为...</string>
+   </property>
+  </action>
   <action name="saveAction">
    <property name="text">
-    <string>保存模型</string>
+    <string>保存</string>
    </property>
   </action>
  </widget>

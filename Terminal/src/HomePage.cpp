@@ -15,11 +15,14 @@
 #include <QGraphicsDropShadowEffect>
 #include <dirent.h>
 #include <iostream>
+#include <QMessageBox>
+#include <QJsonArray>
 #include "HomePage.h"
 #include "ui_HomePage.h"
 #include "SolutionItem.h"
 #include "ConfigPage.h"
 #include "Editor.h"
+#include "BaseModel.h"
 
 namespace hzd {
 
@@ -37,6 +40,7 @@ namespace hzd {
 
     HomePage::HomePage(QWidget *parent) :
             QWidget(parent), ui(new Ui::HomePage) {
+
         ui->setupUi(this);
         /* region scroll area style */
         ui->resultTable
@@ -123,12 +127,12 @@ namespace hzd {
 
         DIR    *dir;
         struct    dirent    *ptr;
-        dir = opendir(".");
-        while((ptr = readdir(dir)) != NULL)
+        dir = opendir("solutions");
+        while((ptr = readdir(dir)) != nullptr)
         {
-            std::string fileName = ptr->d_name;
-            if((fileName.size() > 5 ? fileName.substr(fileName.size()-5) : "") == ".json"){
-                AddSolution(fileName);
+            if(std::string(ptr->d_name) == "." || std::string(ptr->d_name) == "..") continue;
+            if(ptr->d_type == DT_DIR){
+                AddSolution(std::string("./solutions/") + ptr->d_name + "/" + ptr->d_name);
             }
         }
         closedir(dir);
@@ -145,19 +149,52 @@ namespace hzd {
     }
 
     HomePage::~HomePage() {
-        delete ui;
         for(auto& solution : solutionMap) {
-            solution.second->configurePackage.Serialize(solution.second->configurePackage.name + ".json");
+            const auto& name = solution.second->configurePackage.name;
+            auto dirPath = "./solutions/" + name + "/";
+            if(!std::filesystem::exists(dirPath) && !std::filesystem::create_directories(dirPath)){
+                QMessageBox::critical(nullptr,"错误","无法创建目录");
+                continue;
+            }
+            solution.second->configurePackage.Serialize(dirPath + name + ".json");
+            auto json = QJsonDocument(solution.second->editorFlowJson).toJson();
+            QFile file((dirPath + name + ".flow").c_str());
+            if(!file.open(QIODevice::WriteOnly)){
+                QMessageBox::critical(nullptr,"错误","无法创建文件");
+                continue;
+            }
+            file.write(json);
+            file.close();
+            Scene::Generate(solution.second->editorFlowJson,dirPath + name);
         }
+        delete ui;
     }
 
     void HomePage::AddSolution(const std::string& path) {
         auto* solution = new SolutionItem(nullptr,solutionIndex);
         solutionMap[solutionIndex] = solution;
         if(!path.empty()){
-            if(!solution->configurePackage.Deserialize(path)) return;
+            if(!solution->configurePackage.Deserialize(path + ".json")) return;
+            QFile file((path + ".flow").c_str());
+            if(!file.open(QIODevice::ReadOnly)) return;
+            solution->editorFlowJson = QJsonDocument::fromJson(file.readAll()).object();
+            file.close();
+            auto nodes = solution->editorFlowJson["nodes"];
+            auto nodesArray = nodes.toArray();
+            for(const auto& node : nodesArray) {
+                auto internalData = node.toObject()["internal-data"].toObject();
+                QString modelName = internalData["model-name"].toString();
+                if(modelName == "结算器") {
+                    BaseModel::broadcaster.Deserialize(internalData["nameIdMap"]);
+                    break;
+                }
+            }
+
             solution->updateUI();
-            remove(path.c_str());
+            if(std::filesystem::remove_all(path.substr(0,path.find_last_of('/')).c_str()) < 0) {
+                QMessageBox::critical(nullptr,"错误",path.substr(0,path.find_last_of('/')).c_str());
+                return;
+            }
         }
         ui->solutions->insertWidget(0,solution);
         // 编辑配置
@@ -182,7 +219,7 @@ namespace hzd {
                 &SolutionItem::editMissionSignal,
                 this,
                 [=]{
-                    auto editor = new Editor;
+                    auto* editor = new Editor(*solution);
                     editor->show();
                 }
         );
@@ -199,7 +236,7 @@ namespace hzd {
           solution,
           &SolutionItem::deleteSignal,
           this,
-          [=]{
+          [=, this]{
               solutionMap[solution->id]->hide();
               solutionMap.erase(solution->id);
               ui->solutions->update();
@@ -207,4 +244,5 @@ namespace hzd {
         );
         solutionIndex++;
     }
+
 } // hzd

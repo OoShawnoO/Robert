@@ -89,7 +89,6 @@ namespace hzd {
             mapJson[p.first.c_str()] = p.second;
         }
         modelJson["nameIdMap"] = mapJson;
-        isSerialized = true;
     }
 
     bool ModelBroadcaster::Deserialize(const QJsonValue &p) {
@@ -97,7 +96,7 @@ namespace hzd {
         for(const auto& key : object.keys()) {
             nameIdMap[key.toStdString()] = object[key].toInt();
         }
-        isSerialized = false;
+        return true;
     }
 
     int ModelBroadcaster::At(const std::string &key) {

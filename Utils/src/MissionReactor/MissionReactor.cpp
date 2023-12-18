@@ -68,16 +68,14 @@ namespace hzd {
                 registerItem(buffer,id);
             }
             else if(choiceStr == "sett") {
-                Settlement::StartType startType;
-                Settlement::EndType endType;
                 size_t size;
-                in.read((char*)&startType,SETTLEMENT_STARTTYPE_SIZE);
+                in.read((char*)&settlement.startType,SETTLEMENT_STARTTYPE_SIZE);
                 in.read((char*)&size,sizeof(size_t));
                 settlement.startItems.resize(size);
                 for(auto index = 0; index < size; index++) {
                     in.read((char*)&settlement.startItems[index],sizeof(ItemID));
                 }
-                switch (startType) {
+                switch (settlement.startType) {
                     case Settlement::StartItemAppear : { break; }
                     case Settlement::StartItemAppearInBound : {
                         in.read((char*)&settlement.startBound.x,sizeof(int));
@@ -103,7 +101,7 @@ namespace hzd {
                 for(auto index = 0; index < size; index++) {
                     in.read((char*)&settlement.endItems[index],sizeof(ItemID));
                 }
-                switch(endType) {
+                switch(settlement.endType) {
                     case Settlement::EndItemDisappear : { break; }
                     case Settlement::EndItemAppearInBound :
                     case Settlement::EndItemDisappearInBound : {

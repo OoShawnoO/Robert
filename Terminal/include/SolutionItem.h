@@ -11,6 +11,7 @@
 #define ROBERT_SOLUTIONITEM_H
 
 #include <QWidget>
+#include <QJsonObject>
 #include "Configure.h"
 
 namespace hzd {
@@ -26,6 +27,7 @@ namespace hzd {
         int id{0};
         ~SolutionItem() override;
         ConfigurePackage configurePackage;
+        QJsonObject      editorFlowJson;
         signals:
         void editConfigSignal();
         void editMissionSignal();

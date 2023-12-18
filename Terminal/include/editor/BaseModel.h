@@ -36,7 +36,6 @@ namespace hzd {
         Q_OBJECT
         std::unordered_map<std::string,int> nameIdMap;
     public:
-        bool isSerialized{false};
         void UpdateMap(const std::string& name,int id);
         void EraseMap(const std::string& name);
         bool HasKey(const std::string& name);
