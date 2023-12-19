@@ -12,21 +12,28 @@
 
 #include <QThread>
 #include <QOpenGLWidget>
+#include "LoginForm.h"
 
 namespace hzd {
 
     class VideoThread : public QThread {
     Q_OBJECT
         std::mutex mtx;
-    protected:
-        VideoThread();
+        int currentSolutionId{-1};
+        std::string configJsonStr;
+        QJsonObject flowJson;
     public:
+        Client client;
         bool isStop{false};
+        bool isRun{true};
+        bool isConfig{false};
         void run();
-        static VideoThread& Get();
-        VideoThread& operator=(VideoThread&) = delete;
-        VideoThread(const VideoThread&) = delete;
+        void Wait();
+        VideoThread();
         ~VideoThread();
+    public slots:
+        void stop();
+        void config(int solutionId,std::string configJsonStr,QJsonObject flowJson);
     signals:
         void newFrame(cv::Mat mat);
     };
@@ -38,6 +45,8 @@ namespace hzd {
     class VideoWidget : public QOpenGLWidget {
     Q_OBJECT
     public:
+        std::shared_ptr<VideoThread>     videoThread;
+
         explicit VideoWidget(QWidget *parent = nullptr);
         ~VideoWidget() override;
         void paintEvent(QPaintEvent* e);

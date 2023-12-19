@@ -125,9 +125,6 @@ namespace hzd {
                "      }");
     /* endregion */
 
-        auto* loginForm = new LoginForm(client,this);
-        loginForm->show();
-
         DIR    *dir;
         struct    dirent    *ptr;
         dir = opendir("solutions");
@@ -149,9 +146,36 @@ namespace hzd {
               AddSolution();
           }
         );
+
+        qRegisterMetaType<cv::Mat>("cv::Mat");
+        connect(
+          ui->videoWidget->videoThread.get(),
+          &VideoThread::newFrame,
+          ui->videoWidget,
+          &VideoWidget::paintFrame
+        );
+
+        connect(
+          this,
+          &HomePage::config,
+          ui->videoWidget->videoThread.get(),
+          &VideoThread::config
+        );
+
+        connect(
+                this,
+                &HomePage::stop,
+                ui->videoWidget->videoThread.get(),
+                &VideoThread::stop
+        );
+
+        auto* loginForm = new LoginForm(ui->videoWidget->videoThread->client,this);
+        loginForm->show();
+        ui->videoWidget->videoThread->start();
     }
 
     HomePage::~HomePage() {
+        ui->videoWidget->videoThread->Wait();
         for(auto& solution : solutionMap) {
             const auto& name = solution.second->configurePackage.name;
             auto dirPath = "./solutions/" + name + "/";
@@ -231,32 +255,20 @@ namespace hzd {
                 solution,
                 &SolutionItem::runSignal,
                 this,
-                [&]{
-                    if(!client.isConnected) {
-                        QMessageBox::critical(this,"错误","未连接服务端...");
-                        return;
-                    }
-                    auto jsonData = QJsonDocument(solution->editorFlowJson).toJson();
-                    if(!client.SendWithHeader(jsonData.data(),jsonData.size())){
-                        QMessageBox::critical(this,"错误","发送配置文件失败.");
-                        return;
-                    }
-                    std::string flag;
-                    if(client.Recv(flag,2,false) < 0) {
-                        QMessageBox::critical(this,"错误","接收配置文件响应失败.");
-                        return;
-                    }
-                    if(flag != "ok") {
-                        QMessageBox::critical(this,"错误","配置文件响应失败.");
-                        return;
-                    }
-                    Scene::Generate(solution->editorFlowJson,"__temp__.mission");
-                    if(client.SendFile("__temp__.mission") < 0){
-                        QMessageBox::critical(this,"错误","发送任务文件失败.");
-                        return;
-                    }
+                [&,solution]{
+                    emit config(solutionIndex,solution->configurePackage.toJson(),solution->editorFlowJson);
                 }
         );
+        // 暂停
+        connect(
+          solution,
+          &SolutionItem::stopSignal,
+          this,
+          [&]{
+              emit stop();
+          }
+        );
+        // 删除
         connect(
           solution,
           &SolutionItem::deleteSignal,

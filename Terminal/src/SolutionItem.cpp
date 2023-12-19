@@ -16,7 +16,7 @@ namespace hzd {
     SolutionItem::SolutionItem(QWidget *parent,int _id) :
             QWidget(parent), ui(new Ui::SolutionItem),id(_id) {
         ui->setupUi(this);
-
+        ui->stop->hide();
         connect(
             ui->editConfig,
             &QPushButton::clicked,
@@ -38,7 +38,19 @@ namespace hzd {
                 &QPushButton::clicked,
                 this,
                 [&]{
+                    ui->stop->show();
+                    ui->start->hide();
                     emit runSignal();
+                }
+        );
+        connect(
+                ui->stop,
+                &QPushButton::clicked,
+                this,
+                [&]{
+                    ui->start->show();
+                    ui->stop->hide();
+                    emit stopSignal();
                 }
         );
         connect(

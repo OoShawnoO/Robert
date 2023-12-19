@@ -180,6 +180,7 @@ namespace hzd {
 
          bool Deserialize(const std::string& path);
          void Serialize(const std::string& path);
+         std::string toJson();
      };
 } // hzd
 

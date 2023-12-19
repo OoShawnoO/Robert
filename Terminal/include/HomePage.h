@@ -25,14 +25,15 @@ namespace hzd {
     Q_OBJECT
     public:
         explicit HomePage(QWidget *parent = nullptr);
-
         ~HomePage() override;
         void AddSolution(const std::string& path = "");
+    signals:
+        void stop();
+        void config(int solutionId,std::string configJsonStr,QJsonObject flowJson);
     private:
         Ui::HomePage *ui;
         int solutionIndex{0};
         std::unordered_map<int,SolutionItem*> solutionMap;
-        Client client;
     };
 } // hzd
 

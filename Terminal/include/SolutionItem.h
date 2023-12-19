@@ -32,6 +32,7 @@ namespace hzd {
         void editConfigSignal();
         void editMissionSignal();
         void runSignal();
+        void stopSignal();
         void deleteSignal();
     public slots:
         void updateUI();
