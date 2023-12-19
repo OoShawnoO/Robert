@@ -44,14 +44,37 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::ReadCallback() {
 hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() {
     currentControl = controlPacket.control;
     switch(currentControl) {
+        /**
+         *  客户端开始: 发送Config包 -> 接收Config响应 -> 发送mission文件 -> 发送Start包 ->
+         *            接收帧数据 ...
+         *            [1] -> 发送 ACK[mark:Right/Timeout/Stop]
+         *                  [mark:Right] => 接收帧数据 -> ...
+         *                  [mark:Timeout] => 接收帧数据 -> ...
+         *                  [mark:Stop] => 等待下一步 指令
+         *            [2] -> 发送 Change包 -> 发送Config包 -> 循环开始状态
+         *            [3] -> 发送 Wave包 -> 接收Wave响应 -> 关闭
+         *
+         *  服务端开始: 接收Config包 -> 解析Config包 -> 发送Config响应 -> 接收mission文件 ->
+         *            接收Start包 -> 发送帧数据...
+         *            [1] -> 接收 ACK[mark]
+         *                  [mark:Right] => 继续发送帧数据 ...
+         *                  [mark:Timeout] => 发送上一帧数据 ...
+         *                  [mark:Stop] => 停止工作，等待下一步指令
+         *            [2] -> 接收 Change包 -> 接收Config包 -> 循环开始状态
+         *            [3] -> 接收 Wave包 -> 发送Wave包响应 -> 关闭本连接
+         *
+         */
+
         // 客户端返回
         case Ack: {
             switch (controlPacket.mark) {
                 case Timeout :
                 case Stop : {
+                    // 跳过获取新帧操作
                     return Connection::AfterReadCallback();
                 }
                 case Right : {
+                    // 跳出switch -> 执行Start对应操作获取下一帧数据
                     break;
                 }
             }
@@ -121,7 +144,7 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
         // 客户端选择配置
         case Config : {
             std::string temp;
-            if(!TCPSocket::RecvAll(temp, false)) {
+            if(!TCPSocket::RecvWithHeader(temp, false)) {
                 LOG_ERROR(ServiceConnectionChan,"recv config failed");
                 return FAILED;
             }
@@ -134,8 +157,29 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
             Clear();
 
             if(!interflowConfigure.Load(Configure::Get())){
+                if(TCPSocket::Send("no",2) < 0) {
+                    LOG_ERROR(ServiceConnectionChan,"send config response failed");
+                    return FAILED;
+                }
                 LOG_ERROR(ServiceConnectionChan,"config file have no Interflow item");
                 return FAILED;
+            }
+            else if(!missionReactorConfigure.Load(Configure::Get())) {
+                if(TCPSocket::Send("no",2) < 0) {
+                    LOG_ERROR(ServiceConnectionChan,"send config response failed");
+                    return FAILED;
+                }
+                LOG_ERROR(ServiceConnectionChan,"config file have no MissionReactor item");
+                return FAILED;
+            }else{
+                if(TCPSocket::Send("ok",2) < 0) {
+                    LOG_ERROR(ServiceConnectionChan,"send config response failed");
+                    return FAILED;
+                }
+                if(!TCPSocket::RecvFileWithHeader(missionReactorConfigure.missionFilePath)){
+                    LOG_ERROR(ServiceConnectionChan,"recv mission file failed");
+                    return FAILED;
+                }
             }
 
             ptrInterflow = std::make_shared<Interflow>(
@@ -149,11 +193,6 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
                     interflowConfigure.producerSemKey,
                     interflowConfigure.consumerSemKey
             );
-
-            if(!missionReactorConfigure.Load(Configure::Get())) {
-                LOG_ERROR(ServiceConnectionChan,"config file have no MissionReactor item");
-                return FAILED;
-            }
 
             if(!missionReactor.LoadMission(
                     missionReactorConfigure.missionFilePath,

@@ -13,8 +13,10 @@
 #include <QWidget>
 #include "SolutionItem.h"
 #include "Editor.h"
+#include "LoginForm.h"
 
 namespace hzd {
+
     QT_BEGIN_NAMESPACE
     namespace Ui { class HomePage; }
     QT_END_NAMESPACE
@@ -30,6 +32,7 @@ namespace hzd {
         Ui::HomePage *ui;
         int solutionIndex{0};
         std::unordered_map<int,SolutionItem*> solutionMap;
+        Client client;
     };
 } // hzd
 

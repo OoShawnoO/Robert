@@ -125,6 +125,9 @@ namespace hzd {
                "      }");
     /* endregion */
 
+        auto* loginForm = new LoginForm(client,this);
+        loginForm->show();
+
         DIR    *dir;
         struct    dirent    *ptr;
         dir = opendir("solutions");
@@ -228,8 +231,30 @@ namespace hzd {
                 solution,
                 &SolutionItem::runSignal,
                 this,
-                [=]{
-
+                [&]{
+                    if(!client.isConnected) {
+                        QMessageBox::critical(this,"错误","未连接服务端...");
+                        return;
+                    }
+                    auto jsonData = QJsonDocument(solution->editorFlowJson).toJson();
+                    if(!client.SendWithHeader(jsonData.data(),jsonData.size())){
+                        QMessageBox::critical(this,"错误","发送配置文件失败.");
+                        return;
+                    }
+                    std::string flag;
+                    if(client.Recv(flag,2,false) < 0) {
+                        QMessageBox::critical(this,"错误","接收配置文件响应失败.");
+                        return;
+                    }
+                    if(flag != "ok") {
+                        QMessageBox::critical(this,"错误","配置文件响应失败.");
+                        return;
+                    }
+                    Scene::Generate(solution->editorFlowJson,"__temp__.mission");
+                    if(client.SendFile("__temp__.mission") < 0){
+                        QMessageBox::critical(this,"错误","发送任务文件失败.");
+                        return;
+                    }
                 }
         );
         connect(
