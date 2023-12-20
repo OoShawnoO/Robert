@@ -128,7 +128,7 @@ namespace hzd {
      */
     struct InterflowConfigure {
         // 是否为生产者   / Whether producer or not
-        bool                            isProducer{false};
+        bool                            isProducer{true};
         // 是否使用Tcp / Whether tcp or not
         bool                            isTcp{true};
         // 共享内存键值 / Share memory key
@@ -138,9 +138,9 @@ namespace hzd {
         // 消费者信号量键值 / Consumer semaphore key
         std::string                     consumerSemKey{};
         // 本机地址 / Self address
-        std::string                     myIpAddr{};
+        std::string                     myIpAddr{"127.0.0.1"};
         // 本机端口 / Self port
-        unsigned short                  myPort{0};
+        unsigned short                  myPort{10000};
         // 目标地址 / Destination address
         std::string                     destIpAddr{};
         // 目标端口 / Destination port`
@@ -153,7 +153,7 @@ namespace hzd {
       */
     struct MissionReactorConfigure {
         // 二进制任务文件路径 / Binary mission file path
-        std::string                     missionFilePath{};
+        std::string                     missionFilePath{"__temp__.mission"};
         // 分析帧数 / Frame count for analysis
         int                             analysisFrameCount{10};
         // 开始结算容忍度 / Start settlement tolerance
@@ -165,7 +165,17 @@ namespace hzd {
 
         bool Load(const Configure& configure);
     };
+    /**
+     * @brief CaptureStream相关配置 / CaptureStream configure
+     */
+    struct CaptureStreamConfigure {
+        // 视频/摄像头流索引 /  Video/capture stream index
+        int                             captureIndex{-1};
+        // 视频/摄像头流链接 /  Video/capture stream url
+        std::string                     captureUrl{};
 
+        bool Load(const Configure& configure);
+    };
     /**
      * @brief Package of all configure part
      */
@@ -177,6 +187,7 @@ namespace hzd {
          std::vector<YoloConfigure>     yoloConfigures{};
          InterflowConfigure             interflowConfigure{};
          MissionReactorConfigure        missionReactorConfigure{};
+         CaptureStreamConfigure         captureStreamConfigure{};
 
          bool Deserialize(const std::string& path);
          void Serialize(const std::string& path);

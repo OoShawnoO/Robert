@@ -43,7 +43,7 @@ namespace hzd {
         Ui::Editor *ui;
         std::shared_ptr<NodeDelegateModelRegistry> registry;
         std::shared_ptr<DataFlowGraphModel>        dataFlowGraphModel;
-        std::shared_ptr<Scene>                     scene;
+        Scene*                                     scene;
         std::shared_ptr<GraphicsView>              view;
     };
 } // hzd

@@ -547,7 +547,7 @@ namespace hzd {
             outputNames.emplace_back(names.substr(pos + 1,newPos - pos -1));
             pos = names.find('\'',newPos + 1);
         }
-        return false;
+        return true;
     }
 
     Detection::Detection(cv::Rect & _rect, float _conf, int _classId) {

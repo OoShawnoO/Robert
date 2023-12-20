@@ -26,9 +26,7 @@ namespace hzd {
         // 确认成功收到
         Ack,
         // 开始工作
-        Start,
-        // 切换配置
-        Change,
+        Work,
         // Interflow挥手
         Wave
     };
@@ -36,8 +34,6 @@ namespace hzd {
     enum MarkType {
         // 正确接收
         Right,
-        // 暂停
-        Stop,
         // 超时
         Timeout
     };

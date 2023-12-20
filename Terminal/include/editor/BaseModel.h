@@ -34,7 +34,7 @@ namespace hzd {
 
     class ModelBroadcaster : public QObject {
         Q_OBJECT
-        std::unordered_map<std::string,int> nameIdMap;
+        std::unordered_map<std::string,int> nameIdMap{{"无",-1}};
     public:
         void UpdateMap(const std::string& name,int id);
         void EraseMap(const std::string& name);
@@ -43,6 +43,7 @@ namespace hzd {
         void Serialize(QJsonObject& modelJson);
         bool Deserialize(const QJsonValue& p);
         int At(const std::string& key);
+        void Clear();
     signals:
         void updated();
     };

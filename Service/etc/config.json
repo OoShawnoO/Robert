@@ -25,11 +25,11 @@
     "allow": [],
     "deny": [],
     "epollTimeout": 0,
-    "ip": "",
+    "ip": "127.0.0.1",
     "isEdgeTrigger": false,
-    "isNonblock": true,
-    "isOneShot": true,
-    "port": 0,
+    "isNonblock": false,
+    "isOneshot": true,
+    "port": 9999,
     "reactorCount": 1
   },
   "Yolo": [

@@ -41,9 +41,8 @@ bool hzd::CaptureStream::Open(int captureIndex, unsigned int _workerCount) {
 
 bool hzd::CaptureStream::Read(cv::Mat &frame, unsigned int expectIndex) {
     std::unique_lock<std::mutex> uniqueLock(readMutex);
-    uniqueLock.lock();
     // 当还没有读到该帧时
-    if(expectIndex - frontIndex > matQueue.size()) {
+    if(expectIndex - matQueue.front().index >= matQueue.size()) {
         // 当缓存满时等待
         if(matQueue.size() >= 64) {
             uniqueLock.unlock();
@@ -52,35 +51,34 @@ bool hzd::CaptureStream::Read(cv::Mat &frame, unsigned int expectIndex) {
         }
 
         matQueue.emplace_back();
-        readCountQueue.emplace_back(workerCount);
-        if(!capture.read(matQueue.back())){
+        readCountQueue.emplace_back(workerCount-1);
+        matQueue.back().index = expectIndex;
+        if(!capture.read(matQueue.back().mat)){
             LOG_ERROR(CaptureStreamChan,"read new mat failed");
             return false;
         }
-        readCountQueue.back()--;
         // 由于Mat有引用计数，比较安全。
-        if(readCountQueue.back() == 0){
-            frontIndex = expectIndex;
-            frame = std::move(matQueue.front());
+        if(readCountQueue.front() == 0){
+            frame = std::move(matQueue.front().mat);
             matQueue.pop_front();
             readCountQueue.pop_front();
         }else{
-            frame = readCountQueue.back();
+            frame = matQueue.back().mat;
         }
     }
-    // 当已经读到该帧
+    // 当已经读过该帧
     else{
-        readCountQueue[expectIndex - frontIndex]--;
+        readCountQueue[expectIndex - matQueue.front().index]--;
 
-        if(expectIndex == frontIndex
+        if(expectIndex == matQueue.front().index
         && readCountQueue.front() == 0) {
             frontIndex++;
-            frame = std::move(matQueue.front());
+            frame = std::move(matQueue.front().mat);
             matQueue.pop_front();
             readCountQueue.pop_front();
             if(matQueue.size() == 63)  fullSem.signal();
         }else{
-            frame = matQueue[expectIndex - frontIndex];
+            frame = matQueue[expectIndex - matQueue.front().index].mat;
         }
     }
     return true;

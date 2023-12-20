@@ -122,6 +122,9 @@ namespace hzd {
                     }
                 }
             }
+            else if(choiceStr == "\001") {
+                return true;
+            }
             else {
                 in.close();
                 LOG_ERROR(MissionReactorChan,"mission file bad format");

@@ -29,7 +29,7 @@ namespace hzd {
         void AddSolution(const std::string& path = "");
     signals:
         void stop();
-        void config(int solutionId,std::string configJsonStr,QJsonObject flowJson);
+        void config(int solutionId,ConfigurePackage configurePackage,QJsonObject flowJson);
     private:
         Ui::HomePage *ui;
         int solutionIndex{0};

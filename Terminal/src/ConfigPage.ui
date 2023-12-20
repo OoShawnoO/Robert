@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1122</width>
-    <height>698</height>
+    <width>1243</width>
+    <height>803</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,7 +41,7 @@ QCheckBox::indicator:checked:hover {
     background-color: rgb(170, 255, 0); 
 } </string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_9">
+  <layout class="QVBoxLayout" name="verticalLayout_10">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_17">
      <item>
@@ -336,6 +336,57 @@ QCheckBox::indicator:checked:hover {
          </layout>
         </widget>
        </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="title">
+          <string>视频流相关</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_18">
+            <item>
+             <widget class="QLabel" name="label_25">
+              <property name="text">
+               <string>摄像头索引:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="indexEdit">
+              <property name="text">
+               <string>-1</string>
+              </property>
+              <property name="placeholderText">
+               <string>0.8</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_19">
+            <item>
+             <widget class="QLabel" name="label_26">
+              <property name="text">
+               <string>摄像头链接:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="urlEdit">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -462,7 +513,7 @@ QCheckBox::indicator:checked:hover {
             <item>
              <widget class="QLineEdit" name="myPortEdit">
               <property name="text">
-               <string>9999</string>
+               <string>10000</string>
               </property>
               <property name="placeholderText">
                <string>9999</string>

@@ -63,9 +63,7 @@ namespace hzd {
         auto& worker = *_worker;
         while(!worker.isStop) {
             cv::Mat frame;
-            worker.currentFrameCount++;
-
-            if(!worker.captureStream.Read(frame,worker.currentFrameCount)){
+            if(!worker.captureStream.Read(frame,++worker.currentFrameCount)){
                 LOG_ERROR(InferenceWorkerChan,"read frame failed");
                 return;
             }

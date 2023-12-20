@@ -383,7 +383,8 @@ namespace hzd {
     int TCPSocket::RecvFileWithHeader(const std::string &filePath) {
         if(isNew){
             size_t size;
-            if(recv(sock,&size,sizeof(size),0) < 0){
+            while(recv(sock,&size,sizeof(size),0) < 0){
+                if(errno == EAGAIN || errno == EWOULDBLOCK) continue;
                 LOG_ERROR(SocketChan, strerror(errno));
                 return -1;
             }

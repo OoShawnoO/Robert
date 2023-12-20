@@ -120,14 +120,15 @@ namespace hzd {
         parameters[3] = BaseModel::broadcaster.At(object["组件B"].toString().toStdString());
         parameters[4] = object["参考时间"].toString().toInt();
         auto list = object["边界"].toString().split(' ');
-        if(list.size() != 4){
+        if(parameters[3].asInt32() == -1 && list.size() != 4){
             QMessageBox::critical(nullptr,"错误","边界应该为x y w h格式书写");
             return false;
+        }else{
+            parameters[5] = list[0].toInt();
+            parameters[6] = list[1].toInt();
+            parameters[7] = list[2].toInt();
+            parameters[8] = list[3].toInt();
         }
-        parameters[5] = list[0].toInt();
-        parameters[6] = list[1].toInt();
-        parameters[7] = list[2].toInt();
-        parameters[8] = list[3].toInt();
         parameters[9] = object["任意个体"] == "是";
         for(const auto& startSignal : startSignals) {
             parameters.push_back(Parameter(startSignal.toInt()));
@@ -151,14 +152,15 @@ namespace hzd {
         parameters[3] = BaseModel::broadcaster.At(object["组件B"].toString().toStdString());
         parameters[4] = object["参考时间"].toString().toInt();
         auto list = object["边界"].toString().split(' ');
-        if(list.size() != 4){
+        if(parameters[3].asInt32() == -1 && list.size() != 4){
             QMessageBox::critical(nullptr,"错误","边界应该为x y w h格式书写");
             return false;
+        }else{
+            parameters[5] = list[0].toInt();
+            parameters[6] = list[1].toInt();
+            parameters[7] = list[2].toInt();
+            parameters[8] = list[3].toInt();
         }
-        parameters[5] = list[0].toInt();
-        parameters[6] = list[1].toInt();
-        parameters[7] = list[2].toInt();
-        parameters[8] = list[3].toInt();
         parameters[9] = object["任意个体"] == "是";
         for(const auto& startSignal : startSignals) {
             parameters.push_back(Parameter(startSignal.toInt()));
@@ -182,14 +184,15 @@ namespace hzd {
         parameters[3] = BaseModel::broadcaster.At(object["组件B"].toString().toStdString());
         parameters[4] = object["参考时间"].toString().toInt();
         auto list = object["边界"].toString().split(' ');
-        if(list.size() != 4){
+        if(parameters[3].asInt32() == -1 && list.size() != 4){
             QMessageBox::critical(nullptr,"错误","边界应该为x y w h格式书写");
             return false;
+        }else{
+            parameters[5] = list[0].toInt();
+            parameters[6] = list[1].toInt();
+            parameters[7] = list[2].toInt();
+            parameters[8] = list[3].toInt();
         }
-        parameters[5] = list[0].toInt();
-        parameters[6] = list[1].toInt();
-        parameters[7] = list[2].toInt();
-        parameters[8] = list[3].toInt();
         parameters[9] = object["任意个体"] == "是";
         parameters[10] = object["最小距离权值"].toString().toDouble();
         parameters[11] = object["最大距离权值"].toString().toDouble();
@@ -217,14 +220,15 @@ namespace hzd {
         parameters[3] = BaseModel::broadcaster.At(object["组件B"].toString().toStdString());
         parameters[4] = object["参考时间"].toString().toInt();
         auto list = object["边界"].toString().split(' ');
-        if(list.size() != 4){
+        if(parameters[3].asInt32() == -1 && list.size() != 4){
             QMessageBox::critical(nullptr,"错误","边界应该为x y w h格式书写");
             return false;
+        }else{
+            parameters[5] = list[0].toInt();
+            parameters[6] = list[1].toInt();
+            parameters[7] = list[2].toInt();
+            parameters[8] = list[3].toInt();
         }
-        parameters[5] = list[0].toInt();
-        parameters[6] = list[1].toInt();
-        parameters[7] = list[2].toInt();
-        parameters[8] = list[3].toInt();
         parameters[9] = object["任意个体"] == "是";
         parameters[10] = object["最小距离权值"].toString().toDouble();
         parameters[11] = object["最大距离权值"].toString().toDouble();
@@ -285,14 +289,7 @@ namespace hzd {
             auto internalData = node.toObject()["internal-data"].toObject();
             QString modelName = internalData["model-name"].toString();
             auto n = node.toObject();
-            auto name = modelName.toStdString();
-            if(name == "结算器") GenerateSettlement(packer,n);
-            else if(name == "重要组件") GenerateItem(packer,n);
-            else if(name == "停留事件") GenerateStayMission(packer,n);
-            else if(name == "接触事件") GenerateContactMission(packer,n);
-            else if(name == "人体部位") GeneratePose(packer,n);
-            else if(name == "距离事件") GenerateDistanceMission(packer,n);
-            else if(name == "指定方向距离事件") GenerateDirectedDistanceMission(packer,n);
+            generateMap.at(modelName.toStdString())(packer,n);
         }
         packer.Save();
         return true;

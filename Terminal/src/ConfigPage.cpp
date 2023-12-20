@@ -31,6 +31,7 @@ namespace hzd {
             auto& missionReactorConfigure = configurePackage->missionReactorConfigure;
             auto& interflowConfigure = configurePackage->interflowConfigure;
             auto& yoloConfigures = configurePackage->yoloConfigures;
+            auto& captureStreamConfigure = configurePackage->captureStreamConfigure;
 
             ui->nameEdit->setText(configurePackage->name.c_str());
             ui->descEdit->setText(configurePackage->description.c_str());
@@ -75,6 +76,8 @@ namespace hzd {
             for(const auto& yoloConfigure : tempYoloConfigures) {
                 ui->modelList->addItem(yoloConfigure.name.c_str());
             }
+            ui->indexEdit->setText(std::to_string(captureStreamConfigure.captureIndex).c_str());
+            ui->urlEdit->setText(captureStreamConfigure.captureUrl.c_str());
         }
 
         // 完成按钮
@@ -92,6 +95,7 @@ namespace hzd {
             auto& missionReactorConfigure = configurePackage->missionReactorConfigure;
             auto& interflowConfigure = configurePackage->interflowConfigure;
             auto& yoloConfigures = configurePackage->yoloConfigures;
+            auto& captureStreamConfigure = configurePackage->captureStreamConfigure;
 
             logConfigure.saveRootPath = ui->logEdit->text().toStdString();
             serverConfigure.ip = ui->ipEdit->text().toStdString();
@@ -114,7 +118,8 @@ namespace hzd {
             interflowConfigure.destIpAddr = ui->destIpEdit->text().toStdString();
             interflowConfigure.destPort = ui->destPortEdit->text().toUInt();
             yoloConfigures = std::move(tempYoloConfigures);
-
+            captureStreamConfigure.captureIndex = ui->indexEdit->text().toInt();
+            captureStreamConfigure.captureUrl = ui->urlEdit->text().toStdString();
             emit finish();
 
             close();

@@ -29,6 +29,7 @@ namespace hzd {
         InterflowConfigure          interflowConfigure;
         Ptr<Interflow>              ptrInterflow{nullptr};
 
+        CaptureStreamConfigure      captureStreamConfigure{};
         CaptureStream               captureStream{};
         cv::Mat                     frame{};
         unsigned int                currentFrameCount{0};

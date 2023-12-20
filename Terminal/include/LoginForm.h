@@ -20,7 +20,7 @@ namespace hzd {
     public:
         bool isConnected { false };
         Client() = default;
-        ~Client() override = default;
+        ~Client() override;
         std::shared_ptr<Interflow>      pInterflow;
     };
 

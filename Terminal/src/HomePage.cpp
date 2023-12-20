@@ -148,6 +148,7 @@ namespace hzd {
         );
 
         qRegisterMetaType<cv::Mat>("cv::Mat");
+        qRegisterMetaType<ConfigurePackage>("ConfigurePackage");
         connect(
           ui->videoWidget->videoThread.get(),
           &VideoThread::newFrame,
@@ -168,9 +169,32 @@ namespace hzd {
                 ui->videoWidget->videoThread.get(),
                 &VideoThread::stop
         );
+        connect(
+          ui->videoWidget->videoThread.get(),
+          &VideoThread::error,
+          this,
+          [&](QString errorStr) {
+              QMessageBox::critical(this,"错误",errorStr);
+          }
+        );
+        connect(
+          ui->videoWidget->videoThread.get(),
+          &VideoThread::info,
+          this,
+          [&](QString errorStr) {
+              QMessageBox::information(this,"错误",errorStr);
+          }
+        );
 
-        auto* loginForm = new LoginForm(ui->videoWidget->videoThread->client,this);
-        loginForm->show();
+//        auto* loginForm = new LoginForm(ui->videoWidget->videoThread->client,this);
+//        loginForm->show();
+        if(!ui->videoWidget->videoThread->client.Connect("127.0.0.1",9999)){
+            QMessageBox::critical(this,"失败","连接失败...");
+            return;
+        }
+        ui->videoWidget->videoThread->client.isConnected = true;
+        QMessageBox::information(nullptr,"成功","连接成功!");
+
         ui->videoWidget->videoThread->start();
     }
 
@@ -218,10 +242,10 @@ namespace hzd {
             }
 
             solution->updateUI();
-            if(std::filesystem::remove_all(path.substr(0,path.find_last_of('/')).c_str()) < 0) {
-                QMessageBox::critical(nullptr,"错误",path.substr(0,path.find_last_of('/')).c_str());
-                return;
-            }
+//            if(std::filesystem::remove_all(path.substr(0,path.find_last_of('/')).c_str()) < 0) {
+//                QMessageBox::critical(nullptr,"错误",path.substr(0,path.find_last_of('/')).c_str());
+//                return;
+//            }
         }
         ui->solutions->insertWidget(0,solution);
         // 编辑配置
@@ -247,6 +271,7 @@ namespace hzd {
                 this,
                 [=]{
                     auto* editor = new Editor(*solution);
+                    editor->setAttribute(Qt::WA_DeleteOnClose);
                     editor->show();
                 }
         );
@@ -256,7 +281,7 @@ namespace hzd {
                 &SolutionItem::runSignal,
                 this,
                 [&,solution]{
-                    emit config(solutionIndex,solution->configurePackage.toJson(),solution->editorFlowJson);
+                    emit config(solutionIndex,solution->configurePackage,solution->editorFlowJson);
                 }
         );
         // 暂停

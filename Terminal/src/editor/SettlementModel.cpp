@@ -27,6 +27,7 @@ namespace hzd {
             startItemCombo.SetComboItems(keys);
             endItemCombo.SetComboItems(keys);
         });
+        emit BaseModel::broadcaster.updated();
     }
 
     SettlementModel::~SettlementModel() {
@@ -54,6 +55,10 @@ namespace hzd {
     }
 
     void SettlementModel::load(const QJsonObject &p) {
+        if(p.find("nameIdMap") != p.end()) {
+            BaseModel::broadcaster.Deserialize(p["nameIdMap"]);
+        }
+
         PARSE_MODEL_JSON(p,startCombo,"开始结算事件");
         PARSE_MODEL_JSON(p,endCombo,"结束结算事件");
         PARSE_MODEL_JSON(p,startDuration,"开始参考时间");
@@ -62,8 +67,5 @@ namespace hzd {
         PARSE_MODEL_JSON(p,endItemCombo,"结束结算组件");
         PARSE_MODEL_JSON(p,startRect,"开始结算边界");
         PARSE_MODEL_JSON(p,endRect,"结束结算边界");
-        if(p.find("nameIdMap") != p.end()) {
-            BaseModel::broadcaster.Deserialize(p["nameIdMap"]);
-        }
     }
 } // hzd

@@ -7,6 +7,7 @@
   ******************************************************************************
   */
 
+#include <opencv2/highgui.hpp>
 #include "ServiceConnection.h"      /* ServiceConnection */
 
 const std::string ServiceConnectionChan = "ServiceConnection";
@@ -68,8 +69,7 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
         // 客户端返回
         case Ack: {
             switch (controlPacket.mark) {
-                case Timeout :
-                case Stop : {
+                case Timeout : {
                     // 跳过获取新帧操作
                     return Connection::AfterReadCallback();
                 }
@@ -80,7 +80,7 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
             }
         }
         // 客户端选择开始
-        case Start: {
+        case Work: {
             if(!captureStream.Read(frame,++currentFrameCount)){
                 LOG_ERROR(ServiceConnectionChan,"read frame failed");
                 return FAILED;
@@ -136,13 +136,13 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
             result = missionReactor.React(input);
             break;
         }
-        // 客户端选择切换配置
-        case Change: {
-            ptrInterflow->NotifyEnd();
-            ptrInterflow.reset();
-        }
         // 客户端选择配置
         case Config : {
+            if(ptrInterflow.get()){
+                ptrInterflow->NotifyEnd();
+                ptrInterflow.reset();
+            }
+            // recv config json
             std::string temp;
             if(!TCPSocket::RecvWithHeader(temp, false)) {
                 LOG_ERROR(ServiceConnectionChan,"recv config failed");
@@ -155,11 +155,10 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
             }
 
             Clear();
-
+            // load config json
             if(!interflowConfigure.Load(Configure::Get())){
                 if(TCPSocket::Send("no",2) < 0) {
                     LOG_ERROR(ServiceConnectionChan,"send config response failed");
-                    return FAILED;
                 }
                 LOG_ERROR(ServiceConnectionChan,"config file have no Interflow item");
                 return FAILED;
@@ -167,17 +166,31 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
             else if(!missionReactorConfigure.Load(Configure::Get())) {
                 if(TCPSocket::Send("no",2) < 0) {
                     LOG_ERROR(ServiceConnectionChan,"send config response failed");
-                    return FAILED;
                 }
                 LOG_ERROR(ServiceConnectionChan,"config file have no MissionReactor item");
                 return FAILED;
-            }else{
+            }
+            else if(!captureStreamConfigure.Load(Configure::Get())){
+                if(TCPSocket::Send("no",2) < 0) {
+                    LOG_ERROR(ServiceConnectionChan,"send config response failed");
+                }
+                LOG_ERROR(ServiceConnectionChan,"config file have no CaptureStream item");
+                return FAILED;
+            }
+            else{
                 if(TCPSocket::Send("ok",2) < 0) {
                     LOG_ERROR(ServiceConnectionChan,"send config response failed");
                     return FAILED;
                 }
-                if(!TCPSocket::RecvFileWithHeader(missionReactorConfigure.missionFilePath)){
+                if(TCPSocket::RecvFileWithHeader(missionReactorConfigure.missionFilePath) < 0){
+                    if(TCPSocket::Send("no",2) < 0) {
+                        LOG_ERROR(ServiceConnectionChan,"send mission file response failed");
+                    }
                     LOG_ERROR(ServiceConnectionChan,"recv mission file failed");
+                    return FAILED;
+                }
+                if(TCPSocket::Send("ok",2) < 0) {
+                    LOG_ERROR(ServiceConnectionChan,"send config response failed");
                     return FAILED;
                 }
             }
@@ -205,7 +218,15 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
                 return FAILED;
             }
 
-            for(auto& yoloConfigure : YoloConfigure::Load(Configure::Get())) {
+            auto yoloConfigures = YoloConfigure::Load(Configure::Get());
+
+            if(captureStreamConfigure.captureIndex != -1){
+                captureStream.Open(captureStreamConfigure.captureIndex,yoloConfigures.size() + 1);
+            }else{
+                captureStream.Open(captureStreamConfigure.captureUrl,yoloConfigures.size() + 1);
+            }
+
+            for(auto& yoloConfigure : yoloConfigures) {
                 AddWorker(yoloConfigure);
             }
             break;
@@ -222,9 +243,9 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
 }
 
 hzd::Connection::CallbackReturnType hzd::ServiceConnection::WriteCallback() {
-    switch(controlPacket.mark){
-        case Right:
-        case Timeout: {
+    switch(controlPacket.control){
+        case Ack:
+        case Work: {
             json resultJson;
             resultJson["code"] = (int)result.status;
             for(const auto& index : result.errorMissions){
@@ -242,15 +263,15 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::WriteCallback() {
                 }
                 resultJson["failedReason"].emplace_back(std::move(reason));
             }
-
+//            cv::imshow("frame",frame);
+//            cv::waitKey(0);
             if(!ptrInterflow->SendItem(frame,resultJson)){
                 LOG_ERROR(ServiceConnectionChan,std::string{"send item failed,error:"} + strerror(errno));
                 return FAILED;
             }
             break;
         }
-        case Stop:
-            break;
+        default: break;
     }
     return Connection::WriteCallback();
 }

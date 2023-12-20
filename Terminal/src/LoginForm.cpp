@@ -32,4 +32,9 @@ namespace hzd {
     LoginForm::~LoginForm() {
         delete ui;
     }
+
+    Client::~Client() {
+        Close();
+    }
+
 } // hzd

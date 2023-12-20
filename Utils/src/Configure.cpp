@@ -139,6 +139,16 @@ namespace hzd {
         return true;
     }
 
+    bool CaptureStreamConfigure::Load(const Configure &conf) {
+        try {
+            captureIndex = conf["CaptureStream"]["index"];
+            captureUrl = conf["CaptureStream"]["url"];
+        }catch(...) {
+            return false;
+        }
+        return true;
+    }
+
     void ConfigurePackage::Serialize(const std::string& path) {
         std::ofstream out(path,std::ios::out);
         auto jsonStr = toJson();
@@ -198,6 +208,8 @@ namespace hzd {
                 }
                 yoloConfigures.emplace_back(yoloConf);
             }
+            captureStreamConfigure.captureIndex = conf["CaptureStream"]["index"];
+            captureStreamConfigure.captureUrl = conf["CaptureStream"]["url"];
         }catch(...){
             in.close();
             return false;
@@ -256,6 +268,8 @@ namespace hzd {
         conf["MissionReactor"]["startTolerance"] = missionReactorConfigure.startTolerance;
         conf["MissionReactor"]["endTolerance"] = missionReactorConfigure.endTolerance;
         conf["MissionReactor"]["saveResultCount"] = missionReactorConfigure.saveResultCount;
+        conf["CaptureStream"]["index"] = captureStreamConfigure.captureIndex;
+        conf["CaptureStream"]["url"] = captureStreamConfigure.captureUrl;
         return to_string(conf);
     }
 } // hzd

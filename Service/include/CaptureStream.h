@@ -50,12 +50,16 @@ namespace hzd {
 
         void Release();
     private:
+        struct _Mat {
+            int index;
+            cv::Mat mat;
+        };
         cv::VideoCapture            capture{};
         Semaphore                   fullSem{0};
         unsigned int                workerCount{0};
         unsigned int                frontIndex{0};
         std::mutex                  readMutex{};
-        std::deque<cv::Mat>         matQueue{};
+        std::deque<_Mat>         matQueue{};
         std::deque<unsigned int>    readCountQueue{};
 
     };

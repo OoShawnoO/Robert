@@ -20,20 +20,26 @@ namespace hzd {
     Q_OBJECT
         std::mutex mtx;
         int currentSolutionId{-1};
-        std::string configJsonStr;
+        ConfigurePackage configurePackage;
         QJsonObject flowJson;
+        int         frameId{0};
+        bool sendControlPacket(size_t frameId,ControlType type,MarkType mark);
+        bool acquireOk();
     public:
         Client client;
         bool isStop{false};
-        bool isRun{true};
+        bool isRun{false};
         bool isConfig{false};
         void run();
         void Wait();
         VideoThread();
         ~VideoThread();
+    signals:
+        void error(QString errorStr);
+        void info(QString infoStr);
     public slots:
         void stop();
-        void config(int solutionId,std::string configJsonStr,QJsonObject flowJson);
+        void config(int solutionId,ConfigurePackage configurePackage,QJsonObject flowJson);
     signals:
         void newFrame(cv::Mat mat);
     };
@@ -49,13 +55,13 @@ namespace hzd {
 
         explicit VideoWidget(QWidget *parent = nullptr);
         ~VideoWidget() override;
-        void paintEvent(QPaintEvent* e);
+        void paintEvent(QPaintEvent* e) override;
     public slots:
         void paintFrame(cv::Mat mat);
     private:
         Ui::VideoWidget *ui;
-        QImage frame;
         QPainter p;
+        QImage frame;
     };
 } // hzd
 

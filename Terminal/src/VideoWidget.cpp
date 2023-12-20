@@ -46,13 +46,15 @@ namespace hzd {
         p.end();
     }
 
-    void VideoThread::config(int solutionId, std::string _configJsonStr, QJsonObject _flowJson) {
+    void VideoThread::config(int solutionId, ConfigurePackage _configurePackage, QJsonObject _flowJson) {
         mtx.lock();
-//        currentSolutionId = solutionId;
-//        configJsonStr = std::move(_configJsonStr);
-//        flowJson = std::move(_flowJson);
+        if(currentSolutionId != solutionId){
+            currentSolutionId = solutionId;
+            configurePackage = std::move(_configurePackage);
+            flowJson = std::move(_flowJson);
+            isConfig = true;
+        }
         isRun = true;
-//        isConfig = true;
         mtx.unlock();
     }
 
@@ -63,48 +65,69 @@ namespace hzd {
     void VideoThread::run() {
         cv::VideoCapture videoCapture("/mnt/c/Users/84083/Desktop/毕设/3.mp4");
         cv::Mat mat;
+        json json;
         while(!isStop) {
             // 暂停
             while(!isRun) {
-//                std::lock_guard<std::mutex> guard(mtx);
                 msleep(10);
             }
-            mtx.lock();
-            if(!videoCapture.read(mat)) {
-                videoCapture.open("/mnt/c/Users/84083/Desktop/毕设/3.mp4");
-                videoCapture.read(mat);
-            }
-            mtx.unlock();
-            emit newFrame(mat);
-            msleep(40);
 
-            /*
             if(isConfig) {
-                if(!client.isConnected) {
-                    QMessageBox::critical(nullptr,"错误","未连接服务端...");
-                    return;
-                }
-                if(!client.SendWithHeader(configJsonStr.c_str(),configJsonStr.size())){
-                    QMessageBox::critical(nullptr,"错误","发送配置文件失败.");
-                    return;
-                }
+                std::lock_guard<std::mutex> guard(mtx);
                 std::string flag;
-                if(client.Recv(flag,2,false) < 0) {
-                    QMessageBox::critical(nullptr,"错误","接收配置文件响应失败.");
+                if(!client.isConnected) {
+                    error("未连接服务端...");
                     return;
                 }
-                if(flag != "ok") {
-                    QMessageBox::critical(nullptr,"错误","配置文件响应失败.");
+
+                if(!sendControlPacket(0,Config,Right)){
+                    error("发送控制包失败...");
                     return;
                 }
-                Scene::Generate(flowJson,"__temp__.mission");
-                if(client.SendFile("__temp__.mission") < 0){
-                    QMessageBox::critical(nullptr,"错误","发送任务文件失败.");
+                auto configJsonStr = configurePackage.toJson();
+                if(!client.SendWithHeader(configJsonStr.c_str(),configJsonStr.size())){
+                    error("发送配置文件失败...");
                     return;
                 }
+                if(!acquireOk()) {
+                    error("接收配置文件响应失败...");
+                    return;
+                }
+
+                Scene::Generate(flowJson,"__temp__");
+                if(client.SendFileWithHeader("__temp__.mission") < 0){
+                    error("发送任务文件失败...");
+                    return;
+                }
+                if(!acquireOk()) {
+                    error("接收传输文件响应失败...");
+                    return;
+                }
+                msleep(100);
+                client.pInterflow = std::make_shared<Interflow>(
+                    false,
+                    configurePackage.interflowConfigure.isTcp,
+                    "",
+                    0,
+                    configurePackage.interflowConfigure.myIpAddr,
+                    configurePackage.interflowConfigure.myPort,
+                    configurePackage.interflowConfigure.shareKey,
+                    configurePackage.interflowConfigure.producerSemKey,
+                    configurePackage.interflowConfigure.consumerSemKey
+                );
                 isConfig = false;
             }
-            */
+            sendControlPacket(frameId++,Work,Right);
+            if(!client.pInterflow->ReceiveItem(mat,json)){
+                error("接收帧错误！");
+                return;
+            }
+//            if(!videoCapture.read(mat)) {
+//                videoCapture.open("/mnt/c/Users/84083/Desktop/毕设/3.mp4");
+//                videoCapture.read(mat);
+//            }
+            emit newFrame(mat);
+            msleep(20);
         }
     }
 
@@ -118,6 +141,19 @@ namespace hzd {
         mtx.lock();
         isRun = false;
         mtx.unlock();
+    }
+
+    bool VideoThread::sendControlPacket(size_t frameId, ControlType type, MarkType mark) {
+        ControlPacket packet{frameId,type,mark};
+        return client.Send((char*)&packet,sizeof(packet)) > 0;
+    }
+
+    bool VideoThread::acquireOk() {
+        std::string flag;
+        if(client.Recv(flag,2,false) < 0 || flag != "ok") {
+            return false;
+        }
+        return true;
     }
 
     VideoThread::~VideoThread() = default;

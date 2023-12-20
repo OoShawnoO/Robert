@@ -92,14 +92,21 @@ namespace hzd {
     }
 
     bool ModelBroadcaster::Deserialize(const QJsonValue &p) {
+        Clear();
         auto object = p.toObject();
         for(const auto& key : object.keys()) {
             nameIdMap[key.toStdString()] = object[key].toInt();
         }
+        emit updated();
         return true;
     }
 
     int ModelBroadcaster::At(const std::string &key) {
         return nameIdMap.at(key);
+    }
+
+    void ModelBroadcaster::Clear() {
+        nameIdMap.clear();
+        nameIdMap["无"] = -1;
     }
 } // hzd
