@@ -280,8 +280,8 @@ namespace hzd {
                 solution,
                 &SolutionItem::runSignal,
                 this,
-                [&,solution]{
-                    emit config(solutionIndex,solution->configurePackage,solution->editorFlowJson);
+                [=]{
+                    emit config(solution->id,solution->configurePackage,solution->editorFlowJson);
                 }
         );
         // 暂停

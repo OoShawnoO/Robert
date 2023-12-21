@@ -103,7 +103,8 @@ namespace hzd {
                     error("接收传输文件响应失败...");
                     return;
                 }
-                msleep(100);
+                client.pInterflow.reset();
+                msleep(10);
                 client.pInterflow = std::make_shared<Interflow>(
                     false,
                     configurePackage.interflowConfigure.isTcp,
@@ -117,7 +118,10 @@ namespace hzd {
                 );
                 isConfig = false;
             }
-            sendControlPacket(frameId++,Work,Right);
+            if(!sendControlPacket(frameId++,Work,Right)){
+                error("发送控制包失败!");
+                return;
+            }
             if(!client.pInterflow->ReceiveItem(mat,json)){
                 error("接收帧错误！");
                 return;

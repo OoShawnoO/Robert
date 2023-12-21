@@ -212,10 +212,13 @@ namespace hzd {
         destAddr.sin_port = htons(port);
         destAddr.sin_family = AF_INET;
         destAddr.sin_addr.s_addr = inet_addr(ip.c_str());
-        if(connect(sock,(sockaddr*)&destAddr,sizeof(destAddr)) < 0){
+
+        int times = 5;
+        while(--times > 0 && connect(sock,(sockaddr*)&destAddr,sizeof(destAddr)) < 0){
             LOG_ERROR(SocketChan,strerror(errno));
-            return false;
+            sleep(1);
         }
+        if(times == 0) return false;
         return true;
     }
 

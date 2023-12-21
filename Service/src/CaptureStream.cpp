@@ -47,6 +47,7 @@ bool hzd::CaptureStream::Read(cv::Mat &frame, unsigned int expectIndex) {
         if(matQueue.size() >= 64) {
             uniqueLock.unlock();
             fullSem.wait();
+            if(!capture.isOpened()) return false;
             uniqueLock.lock();
         }
 
@@ -93,6 +94,7 @@ void hzd::CaptureStream::Release() {
     if(capture.isOpened()){
         fullSem.signal();
         capture.release();
+        workerCount = 0;
         matQueue.clear();
         readCountQueue.clear();
     }

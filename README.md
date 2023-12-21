@@ -23,6 +23,12 @@
 > - path: _Utils/include_
 > - url:_https://github.com/opencv/opencv.git_
 
+> **nodeedtior: Qt Node Editor. Dataflow programming framework 3.0.10 ↑**
+> - author: *paceholder*
+> - path: _Terminal/thirdparty/\*/QtNodes_
+> - url:_https://github.com/paceholder/nodeeditor.git_
+
+
 ## Usage / 用法
 ```shell
 git clone https://github.com/OoShawnoO/Robert.git

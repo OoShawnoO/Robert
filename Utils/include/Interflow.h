@@ -123,7 +123,7 @@ namespace hzd {
     class Interflow {
     public:
         Interflow() = default;
-
+        ~Interflow();
         Interflow(
             bool               isProducer,
             bool               isTcp,
@@ -199,7 +199,7 @@ namespace hzd {
           * @retval None
           */
         void NotifyEnd();
-
+        void Close();
     private:
         bool                        isInit{false};
         bool                        isTcp;

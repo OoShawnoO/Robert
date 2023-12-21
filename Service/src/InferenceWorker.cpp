@@ -29,7 +29,7 @@ namespace hzd {
     detectChan(std::move(_detectChan)),
     poseChan(std::move(_poseChan))
     {
-        if(yoloConfigure.isPose && yoloConfigure.version == 8) {
+        if(yoloConfigure.isPose) {
             if(yoloConfigure.version == 8){
                 yoloVersion = Yolo::YoloVersion::PoseV8;
             }
@@ -78,6 +78,7 @@ namespace hzd {
                         return;
                     }
                     worker.detectChan->push(std::move(item));
+                    break;
                 }
                 case Yolo::PoseV8 :
                 case Yolo::PoseV5 : {
@@ -88,6 +89,7 @@ namespace hzd {
                         return;
                     }
                     worker.poseChan->push(std::move(item));
+                    break;
                 }
 
             }

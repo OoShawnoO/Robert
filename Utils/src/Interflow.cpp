@@ -159,6 +159,7 @@ namespace hzd {
                 if (!tcp.Listen() || !tcp.Accept(tempSocket)) {
                     exit(-1);
                 }
+                tcp.Close();
                 tempSocket.Moveto(tcp);
 
                 encodeParams.emplace_back(cv::IMWRITE_JPEG_QUALITY);
@@ -307,10 +308,12 @@ namespace hzd {
         }
         std::string temp;
         if(tcp.Recv(temp,sizeof(cacheQueueItem.tcpMatProp),false) <= 0){
+            LOG_ERROR(InterflowChan,"接收mat prop失败");
             return false;
         }
         cacheQueueItem.tcpMatProp = *(TcpMatProp*)temp.data();
         if(tcp.Recv(temp,cacheQueueItem.tcpMatProp.size,false) <= 0) {
+            LOG_ERROR(InterflowChan,"接收mat data 失败");
             return false;
         }
         cacheQueueItem.matBuffer.assign(temp.begin(),temp.end());
@@ -327,6 +330,15 @@ namespace hzd {
         json = json::parse(temp);
         if(json.empty()) return false;
         return true;
+    }
+
+    Interflow::~Interflow() {
+        Close();
+    }
+
+    void Interflow::Close() {
+        tcp.Close();
+        udp.Close();
     }
 
     Interflow::CacheQueueItem::CacheQueueItem(Interflow::CacheQueueItem && cq) noexcept {

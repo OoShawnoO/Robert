@@ -51,7 +51,7 @@ namespace hzd {
         void Release();
     private:
         struct _Mat {
-            int index;
+            unsigned int index;
             cv::Mat mat;
         };
         cv::VideoCapture            capture{};

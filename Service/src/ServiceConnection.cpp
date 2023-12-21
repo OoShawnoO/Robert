@@ -8,6 +8,8 @@
   */
 
 #include <opencv2/highgui.hpp>
+#include <future>
+#include <iostream>
 #include "ServiceConnection.h"      /* ServiceConnection */
 
 const std::string ServiceConnectionChan = "ServiceConnection";
@@ -138,10 +140,6 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
         }
         // 客户端选择配置
         case Config : {
-            if(ptrInterflow.get()){
-                ptrInterflow->NotifyEnd();
-                ptrInterflow.reset();
-            }
             // recv config json
             std::string temp;
             if(!TCPSocket::RecvWithHeader(temp, false)) {
@@ -155,6 +153,7 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
             }
 
             Clear();
+
             // load config json
             if(!interflowConfigure.Load(Configure::Get())){
                 if(TCPSocket::Send("no",2) < 0) {
@@ -189,12 +188,25 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
                     LOG_ERROR(ServiceConnectionChan,"recv mission file failed");
                     return FAILED;
                 }
+
+                if(!missionReactor.LoadMission(
+                        missionReactorConfigure.missionFilePath,
+                        missionReactorConfigure.analysisFrameCount,
+                        missionReactorConfigure.startTolerance,
+                        missionReactorConfigure.endTolerance,
+                        missionReactorConfigure.saveResultCount
+                )){
+                    if(TCPSocket::Send("no",2) < 0) {
+                        LOG_ERROR(ServiceConnectionChan,"send mission file response failed");
+                    }
+                    LOG_ERROR(ServiceConnectionChan,"mission file not found");
+                    return FAILED;
+                }
                 if(TCPSocket::Send("ok",2) < 0) {
                     LOG_ERROR(ServiceConnectionChan,"send config response failed");
                     return FAILED;
                 }
             }
-
             ptrInterflow = std::make_shared<Interflow>(
                     interflowConfigure.isProducer,
                     interflowConfigure.isTcp,
@@ -207,23 +219,16 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
                     interflowConfigure.consumerSemKey
             );
 
-            if(!missionReactor.LoadMission(
-                    missionReactorConfigure.missionFilePath,
-                    missionReactorConfigure.analysisFrameCount,
-                    missionReactorConfigure.startTolerance,
-                    missionReactorConfigure.endTolerance,
-                    missionReactorConfigure.saveResultCount
-            )){
-                LOG_ERROR(ServiceConnectionChan,"mission file not found");
-                return FAILED;
-            }
-
             auto yoloConfigures = YoloConfigure::Load(Configure::Get());
 
             if(captureStreamConfigure.captureIndex != -1){
-                captureStream.Open(captureStreamConfigure.captureIndex,yoloConfigures.size() + 1);
+                if(!captureStream.Open(captureStreamConfigure.captureIndex,yoloConfigures.size() + 1)){
+                    LOG_ERROR(ServiceConnectionChan,"open capture index failed");
+                }
             }else{
-                captureStream.Open(captureStreamConfigure.captureUrl,yoloConfigures.size() + 1);
+                if(!captureStream.Open(captureStreamConfigure.captureUrl,yoloConfigures.size() + 1)){
+                    LOG_ERROR(ServiceConnectionChan,"open capture url failed");
+                }
             }
 
             for(auto& yoloConfigure : yoloConfigures) {
@@ -263,8 +268,6 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::WriteCallback() {
                 }
                 resultJson["failedReason"].emplace_back(std::move(reason));
             }
-//            cv::imshow("frame",frame);
-//            cv::waitKey(0);
             if(!ptrInterflow->SendItem(frame,resultJson)){
                 LOG_ERROR(ServiceConnectionChan,std::string{"send item failed,error:"} + strerror(errno));
                 return FAILED;
@@ -306,6 +309,11 @@ void hzd::ServiceConnection::AddWorker(hzd::YoloConfigure &yoloConfigure) {
 void hzd::ServiceConnection::Clear() {
     if(captureStream.isOpened()){
         isStop = true;
+        currentFrameCount = 0;
+        if(ptrInterflow.get()) {
+            ptrInterflow->Close();
+            ptrInterflow.reset();
+        }
         captureStream.Release();
         for(auto& thread : threads) {
             thread.join();

@@ -285,6 +285,13 @@ namespace hzd {
     bool Scene::Generate(const QJsonObject &jsonObject,const std::string& name) {
         MissionPacker packer(name + ".mission");
         QJsonArray nodeArray = jsonObject["nodes"].toArray();
+        for(const auto node : nodeArray) {
+            auto data = node.toObject()["internal-data"].toObject();
+            if(data["model-name"] == "结算器") {
+                BaseModel::broadcaster.Deserialize(data["nameIdMap"]);
+                break;
+            }
+        }
         for(const auto node : nodeArray){
             auto internalData = node.toObject()["internal-data"].toObject();
             QString modelName = internalData["model-name"].toString();

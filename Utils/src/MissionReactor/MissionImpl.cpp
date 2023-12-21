@@ -360,8 +360,8 @@ namespace hzd {
             anyoneTriggle = parameters[9].asBool();
             minThreshold = parameters[10].asDouble();
             maxThreshold = parameters[11].asDouble();
-            vecA = {parameters[12].asDouble(),parameters[13].asDouble()};
-            vecB = {parameters[14].asDouble(),parameters[15].asDouble()};
+            vecA = {(double)parameters[12].asInt32(),(double)parameters[13].asInt32()};
+            vecB = {(double)parameters[14].asInt32(),(double)parameters[15].asInt32()};
             for(auto index = 1;index <= startSignalCount;index++ ){
                 startSignals.push_back(parameters[15+index].asInt32());
             }

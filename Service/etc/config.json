@@ -11,7 +11,7 @@
     "shareKey": ""
   },
   "Log": {
-    "channel": null,
+    "channels": {},
     "path": ""
   },
   "MissionReactor": {
