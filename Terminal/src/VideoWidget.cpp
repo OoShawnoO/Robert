@@ -79,11 +79,12 @@ namespace hzd {
                     error("未连接服务端...");
                     return;
                 }
-
+                makeFrame("send control packet...");
                 if(!sendControlPacket(0,Config,Right)){
                     error("发送控制包失败...");
                     return;
                 }
+                makeFrame("send configure file...");
                 auto configJsonStr = configurePackage.toJson();
                 if(!client.SendWithHeader(configJsonStr.c_str(),configJsonStr.size())){
                     error("发送配置文件失败...");
@@ -93,7 +94,7 @@ namespace hzd {
                     error("接收配置文件响应失败...");
                     return;
                 }
-
+                makeFrame("generate and send mission file...");
                 Scene::Generate(flowJson,"__temp__");
                 if(client.SendFileWithHeader("__temp__.mission") < 0){
                     error("发送任务文件失败...");
@@ -103,6 +104,7 @@ namespace hzd {
                     error("接收传输文件响应失败...");
                     return;
                 }
+                makeFrame("link interflow...");
                 client.pInterflow.reset();
                 msleep(10);
                 client.pInterflow = std::make_shared<Interflow>(
@@ -126,10 +128,6 @@ namespace hzd {
                 error("接收帧错误！");
                 return;
             }
-//            if(!videoCapture.read(mat)) {
-//                videoCapture.open("/mnt/c/Users/84083/Desktop/毕设/3.mp4");
-//                videoCapture.read(mat);
-//            }
             emit newFrame(mat);
             msleep(20);
         }
@@ -158,6 +156,12 @@ namespace hzd {
             return false;
         }
         return true;
+    }
+
+    void VideoThread::makeFrame(const std::string& text) {
+        cv::Mat mat(1920,1080,CV_8UC3,cv::Scalar{26,26,26});
+        cv::putText(mat,text.c_str(),{20,800},cv::FONT_HERSHEY_DUPLEX,4,{255,255,255},4,cv::LINE_AA);
+        emit newFrame(mat);
     }
 
     VideoThread::~VideoThread() = default;

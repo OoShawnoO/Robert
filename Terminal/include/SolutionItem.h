@@ -28,6 +28,7 @@ namespace hzd {
         ~SolutionItem() override;
         ConfigurePackage configurePackage;
         QJsonObject      editorFlowJson;
+        void HideRunButton();
         signals:
         void editConfigSignal();
         void editMissionSignal();

@@ -280,8 +280,12 @@ namespace hzd {
                 solution,
                 &SolutionItem::runSignal,
                 this,
-                [=]{
+                [=,this]{
+                    if(lastSolutionIndex != -1) {
+                        solutionMap[lastSolutionIndex]->HideRunButton();
+                    }
                     emit config(solution->id,solution->configurePackage,solution->editorFlowJson);
+                    lastSolutionIndex = solution->id;
                 }
         );
         // 暂停

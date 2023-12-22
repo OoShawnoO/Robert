@@ -25,6 +25,7 @@ namespace hzd {
         int         frameId{0};
         bool sendControlPacket(size_t frameId,ControlType type,MarkType mark);
         bool acquireOk();
+        void makeFrame(const std::string& text);
     public:
         Client client;
         bool isStop{false};

@@ -33,6 +33,7 @@ namespace hzd {
     private:
         Ui::HomePage *ui;
         int solutionIndex{0};
+        int lastSolutionIndex{-1};
         std::unordered_map<int,SolutionItem*> solutionMap;
     };
 } // hzd

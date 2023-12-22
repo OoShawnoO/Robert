@@ -71,4 +71,9 @@ namespace hzd {
         ui->title->setText(configurePackage.name.c_str());
         ui->description->setText(configurePackage.description.c_str());
     }
+
+    void SolutionItem::HideRunButton() {
+        ui->start->show();
+        ui->stop->hide();
+    }
 } // hzd
