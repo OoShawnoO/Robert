@@ -47,27 +47,6 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::ReadCallback() {
 hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() {
     currentControl = controlPacket.control;
     switch(currentControl) {
-        /**
-         *  客户端开始: 发送Config包 -> 接收Config响应 -> 发送mission文件 -> 发送Start包 ->
-         *            接收帧数据 ...
-         *            [1] -> 发送 ACK[mark:Right/Timeout/Stop]
-         *                  [mark:Right] => 接收帧数据 -> ...
-         *                  [mark:Timeout] => 接收帧数据 -> ...
-         *                  [mark:Stop] => 等待下一步 指令
-         *            [2] -> 发送 Change包 -> 发送Config包 -> 循环开始状态
-         *            [3] -> 发送 Wave包 -> 接收Wave响应 -> 关闭
-         *
-         *  服务端开始: 接收Config包 -> 解析Config包 -> 发送Config响应 -> 接收mission文件 ->
-         *            接收Start包 -> 发送帧数据...
-         *            [1] -> 接收 ACK[mark]
-         *                  [mark:Right] => 继续发送帧数据 ...
-         *                  [mark:Timeout] => 发送上一帧数据 ...
-         *                  [mark:Stop] => 停止工作，等待下一步指令
-         *            [2] -> 接收 Change包 -> 接收Config包 -> 循环开始状态
-         *            [3] -> 接收 Wave包 -> 发送Wave包响应 -> 关闭本连接
-         *
-         */
-
         // 客户端返回
         case Ack: {
             switch (controlPacket.mark) {
@@ -240,7 +219,7 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
         case Wave: {
             ptrInterflow->NotifyEnd();
             ptrInterflow.reset();
-            Clear();
+            Close();
             break;
         }
     }
@@ -253,6 +232,15 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::WriteCallback() {
         case Work: {
             json resultJson;
             resultJson["code"] = (int)result.status;
+            if(result.status != MissionReactor::ResStatus::None){
+                auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+                auto* time = localtime(&t);
+                char timeStr[20] = {0};
+                strftime(timeStr,20,"%Y-%m-%d %H:%M:%S",time);
+                std::string timeStdStr = timeStr;
+                resultJson["time"] = timeStdStr;
+            }
+            resultJson["procedure"] = missionReactor.mainMissionName;
             for(const auto& index : result.errorMissions){
                 const auto& mission = *missionReactor.globalMissions[index];
                 std::string reason =

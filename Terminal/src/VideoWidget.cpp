@@ -63,7 +63,6 @@ namespace hzd {
     }
 
     void VideoThread::run() {
-        cv::VideoCapture videoCapture("/mnt/c/Users/84083/Desktop/毕设/3.mp4");
         cv::Mat mat;
         json json;
         while(!isStop) {
@@ -129,6 +128,39 @@ namespace hzd {
                 return;
             }
             emit newFrame(mat);
+
+            if(writer.isOpened()){
+                writer.write(mat);
+            }
+
+
+            if(json["code"] != 0) {
+                QString time = std::string(json["time"]).c_str();
+                QString procedure = std::string(json["procedure"]).c_str();
+                int status = json["code"];
+                switch(status) {
+                    // Success
+                    case 1 : {
+                        writer.release();
+                        emit addTableItem(time,procedure,true,"");
+                    }
+                    // NotSuccess
+                    case 2 : {
+                        writer.release();
+                        for(const auto& reason : json["failedReason"]) {
+                            emit addTableItem(time,procedure,false,std::string(reason).c_str());
+                        }
+                    }
+                    // Start
+                    case 3 : {
+                        if(writer.isOpened()) {
+                            writer.release();
+                        }
+                        writer.open(time.toStdString() + ".mp4",cv::VideoWriter::fourcc('a','v','c','1'),25.0, mat.size());
+                        writer.write(mat);
+                    }
+                }
+            }
             msleep(20);
         }
     }
@@ -160,7 +192,7 @@ namespace hzd {
 
     void VideoThread::makeFrame(const std::string& text) {
         cv::Mat mat(1920,1080,CV_8UC3,cv::Scalar{26,26,26});
-        cv::putText(mat,text.c_str(),{20,800},cv::FONT_HERSHEY_DUPLEX,4,{255,255,255},4,cv::LINE_AA);
+        cv::putText(mat,text,{20,800},cv::FONT_HERSHEY_DUPLEX,4,{255,255,255},4,cv::LINE_AA);
         emit newFrame(mat);
     }
 

@@ -26,18 +26,6 @@
 
 namespace hzd {
 
-    void AddTableItem(QTableWidget* table,const QString& time,const QString& procedure,bool isSuccess,const QString& reason = "") {
-        table->insertRow(0);
-        table->setItem(0,0,new QTableWidgetItem(time));
-        table->setItem(0,1,new QTableWidgetItem(procedure));
-        table->setItem(0,2,new QTableWidgetItem(isSuccess ? "success" : "failed"));
-        table->setItem(0,3,new QTableWidgetItem(reason));
-        for(int i=0;i<4;i++) {
-            table->item(0,i)->setTextAlignment(Qt::AlignCenter);
-        }
-        table->resizeColumnsToContents();
-    }
-
     HomePage::HomePage(QWidget *parent) :
             QWidget(parent), ui(new Ui::HomePage) {
 
@@ -162,7 +150,12 @@ namespace hzd {
           ui->videoWidget->videoThread.get(),
           &VideoThread::config
         );
-
+        connect(
+            ui->videoWidget->videoThread.get(),
+            &VideoThread::addTableItem,
+            this,
+            &HomePage::AddTableItem
+        );
         connect(
                 this,
                 &HomePage::stop,
@@ -281,8 +274,9 @@ namespace hzd {
                 &SolutionItem::runSignal,
                 this,
                 [=,this]{
-                    if(lastSolutionIndex != -1) {
+                    if(lastSolutionIndex != -1 && lastSolutionIndex != solution->id) {
                         solutionMap[lastSolutionIndex]->HideRunButton();
+                        ClearTableItem();
                     }
                     emit config(solution->id,solution->configurePackage,solution->editorFlowJson);
                     lastSolutionIndex = solution->id;
@@ -309,6 +303,27 @@ namespace hzd {
           }
         );
         solutionIndex++;
+    }
+
+    void HomePage::AddTableItem(QString time,QString procedure, bool isSuccess,QString reason) {
+        ui->resultTable->insertRow(0);
+        ui->resultTable->setItem(0,0,new QTableWidgetItem(time));
+        ui->resultTable->setItem(0,1,new QTableWidgetItem(procedure));
+        ui->resultTable->setItem(0,2,new QTableWidgetItem(isSuccess ? "success" : "failed"));
+        if(isSuccess){
+            ui->resultTable->item(0,2)->setBackground(QBrush(QColor{0,255,0}));
+        }else{
+            ui->resultTable->item(0,2)->setBackground(QBrush(QColor{255,0,0}));
+        }
+        ui->resultTable->setItem(0,3,new QTableWidgetItem(reason));
+        for(int i=0;i<4;i++) {
+            ui->resultTable->item(0,i)->setTextAlignment(Qt::AlignCenter);
+        }
+        ui->resultTable->resizeColumnsToContents();
+    }
+
+    void HomePage::ClearTableItem() {
+        ui->resultTable->clearContents();
     }
 
 } // hzd

@@ -27,7 +27,8 @@ namespace hzd {
             int _saveResultCount
     ) {
         Clear();
-
+        mainMissionName = missionFilePath.substr(missionFilePath.find_last_of('/') + 1);
+        mainMissionName = mainMissionName.substr(0,mainMissionName.size() - 8);
         analysisFrameCount = _analysisFrameCount;
         startTolerance = _startTolerance;
         endTolerance = _endTolerance;
@@ -189,7 +190,6 @@ namespace hzd {
         Res res {None,{}};
 
         if(finished.size() < workMissions.size()) finished.resize(workMissions.size(),false);
-
         switch(settlement.status) {
             case Settlement::Wait : {
 
@@ -253,6 +253,7 @@ namespace hzd {
                 settlement.status = Settlement::Status::Running;
                 startFrameNo = input.frameNo + 1;
                 LOG_TRACE(MissionReactorChan,"开始帧号:" + std::to_string(startFrameNo));
+                res.status = ResStatus::Start;
                 break;
             }
             case Settlement::Running : {

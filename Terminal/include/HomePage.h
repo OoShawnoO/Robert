@@ -27,9 +27,12 @@ namespace hzd {
         explicit HomePage(QWidget *parent = nullptr);
         ~HomePage() override;
         void AddSolution(const std::string& path = "");
+        void ClearTableItem();
     signals:
         void stop();
         void config(int solutionId,ConfigurePackage configurePackage,QJsonObject flowJson);
+    public slots:
+        void AddTableItem(QString time,QString procedure,bool isSuccess,QString reason = "");
     private:
         Ui::HomePage *ui;
         int solutionIndex{0};

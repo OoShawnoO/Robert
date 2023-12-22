@@ -33,9 +33,8 @@ namespace hzd {
         enum ResStatus {
             None = 0,
             Success = 1,
-            Stop = 2,
-            Timeout = 3,
-            NotSuccess = 4,
+            NotSuccess = 2,
+            Start = 3
         };
 
         struct Res {

@@ -10,6 +10,7 @@
 #ifndef ROBERT_VIDEOWIDGET_H
 #define ROBERT_VIDEOWIDGET_H
 
+#include <opencv2/videoio.hpp>
 #include <QThread>
 #include <QOpenGLWidget>
 #include "LoginForm.h"
@@ -17,12 +18,13 @@
 namespace hzd {
 
     class VideoThread : public QThread {
-    Q_OBJECT
+        Q_OBJECT
         std::mutex mtx;
         int currentSolutionId{-1};
         ConfigurePackage configurePackage;
         QJsonObject flowJson;
         int         frameId{0};
+        cv::VideoWriter writer;
         bool sendControlPacket(size_t frameId,ControlType type,MarkType mark);
         bool acquireOk();
         void makeFrame(const std::string& text);
@@ -36,6 +38,7 @@ namespace hzd {
         VideoThread();
         ~VideoThread();
     signals:
+        void addTableItem(QString time,QString procedure,bool isSuccess,QString reason);
         void error(QString errorStr);
         void info(QString infoStr);
     public slots:
