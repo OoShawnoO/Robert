@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1243</width>
-    <height>803</height>
+    <height>809</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -383,6 +383,19 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="saveCheckBox">
+            <property name="text">
+             <string>是否保存判断阶段视频</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="tristate">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

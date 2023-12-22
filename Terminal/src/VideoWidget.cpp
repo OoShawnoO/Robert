@@ -19,6 +19,9 @@
 #include "Scene.h"
 
 namespace hzd {
+
+    const std::string VideoThreadChan = "VideoThreadChan";
+
     VideoWidget::VideoWidget(QWidget *parent) :
             QOpenGLWidget(parent), ui(new Ui::VideoWidget) {
         ui->setupUi(this);
@@ -51,6 +54,7 @@ namespace hzd {
         if(currentSolutionId != solutionId){
             currentSolutionId = solutionId;
             configurePackage = std::move(_configurePackage);
+            isSaveVideo = configurePackage.isSaveVideo;
             flowJson = std::move(_flowJson);
             isConfig = true;
         }
@@ -60,6 +64,29 @@ namespace hzd {
 
     VideoThread::VideoThread() {
         isStop = false;
+        ioThread = std::thread([&] {
+            WriteProp writeProp;
+            int fourcc = cv::VideoWriter::fourcc('a','v','c','1');
+            while(!isStop) {
+                if(!writeChan.pop(writeProp)) break;
+                switch (writeProp.type) {
+                    case WriteProp::Open: {
+                        if(!writer.open(videoName,fourcc,25.0,writeProp.mat.size())){
+                            LOG_ERROR(VideoThreadChan,"open video failed");
+                        }
+                    }
+                    case WriteProp::Write: {
+                        writer.write(writeProp.mat);
+                        break;
+                    }
+                    case WriteProp::Release: {
+                        writer.release();
+                        break;
+                    }
+                }
+            }
+        });
+        ioThread.detach();
     }
 
     void VideoThread::run() {
@@ -129,10 +156,9 @@ namespace hzd {
             }
             emit newFrame(mat);
 
-            if(writer.isOpened()){
-                writer.write(mat);
+            if(isSaveVideo && writer.isOpened()) {
+                writeChan.push({WriteProp::Write,mat.clone()});
             }
-
 
             if(json["code"] != 0) {
                 QString time = std::string(json["time"]).c_str();
@@ -141,28 +167,26 @@ namespace hzd {
                 switch(status) {
                     // Success
                     case 1 : {
-                        writer.release();
+                        if(isSaveVideo) writeChan.push({WriteProp::Release,{}});
                         emit addTableItem(time,procedure,true,"");
                     }
                     // NotSuccess
                     case 2 : {
-                        writer.release();
+                        if(isSaveVideo) writeChan.push({WriteProp::Release,{}});
                         for(const auto& reason : json["failedReason"]) {
                             emit addTableItem(time,procedure,false,std::string(reason).c_str());
                         }
                     }
                     // Start
                     case 3 : {
-                        if(writer.isOpened()) {
-                            writer.release();
-                        }
-                        writer.open(time.toStdString() + ".mp4",cv::VideoWriter::fourcc('a','v','c','1'),25.0, mat.size());
-                        writer.write(mat);
+                        videoName = time.toStdString() + ".mp4";
+                        if(isSaveVideo) writeChan.push({WriteProp::Open,mat.clone()});
                     }
                 }
             }
-            msleep(20);
+            msleep(10);
         }
+        writeChan.push();
     }
 
     void VideoThread::Wait() {

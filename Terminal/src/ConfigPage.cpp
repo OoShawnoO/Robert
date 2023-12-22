@@ -78,6 +78,8 @@ namespace hzd {
             }
             ui->indexEdit->setText(std::to_string(captureStreamConfigure.captureIndex).c_str());
             ui->urlEdit->setText(captureStreamConfigure.captureUrl.c_str());
+            if(configurePackage->isSaveVideo) ui->saveCheckBox->setCheckState(Qt::Checked);
+            else ui->saveCheckBox->setCheckState(Qt::Unchecked);
         }
 
         // 完成按钮
@@ -120,6 +122,7 @@ namespace hzd {
             yoloConfigures = std::move(tempYoloConfigures);
             captureStreamConfigure.captureIndex = ui->indexEdit->text().toInt();
             captureStreamConfigure.captureUrl = ui->urlEdit->text().toStdString();
+            configurePackage->isSaveVideo = ui->saveCheckBox->isChecked();
             emit finish();
 
             close();

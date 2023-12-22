@@ -182,6 +182,7 @@ namespace hzd {
      struct ConfigurePackage {
          std::string                    name{"新方案"};
          std::string                    description{"新方案"};
+         bool                           isSaveVideo{false};
          ServerConfigure                serverConfigure{};
          LogConfigure                   logConfigure{};
          std::vector<YoloConfigure>     yoloConfigures{};

@@ -210,6 +210,7 @@ namespace hzd {
             }
             captureStreamConfigure.captureIndex = conf["CaptureStream"]["index"];
             captureStreamConfigure.captureUrl = conf["CaptureStream"]["url"];
+            isSaveVideo = conf["isSaveVideo"];
         }catch(...){
             in.close();
             return false;
@@ -270,6 +271,7 @@ namespace hzd {
         conf["MissionReactor"]["saveResultCount"] = missionReactorConfigure.saveResultCount;
         conf["CaptureStream"]["index"] = captureStreamConfigure.captureIndex;
         conf["CaptureStream"]["url"] = captureStreamConfigure.captureUrl;
+        conf["isSaveVideo"] = isSaveVideo;
         return to_string(conf);
     }
 } // hzd

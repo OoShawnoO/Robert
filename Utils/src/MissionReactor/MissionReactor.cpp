@@ -387,7 +387,7 @@ namespace hzd {
                 res.status = NotSuccess;
                 res.errorMissions.emplace_back(mis);
             }
-            if(res.status != None) return false;
+            if(res.status == NotSuccess) return false;
         }
         res.errorMissions.clear();
         res.status = Success;
