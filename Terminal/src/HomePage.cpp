@@ -113,6 +113,7 @@ namespace hzd {
                "      }");
     /* endregion */
 
+        // 读取已存在方案
         DIR    *dir;
         struct    dirent    *ptr;
         dir = opendir("solutions");
@@ -137,53 +138,58 @@ namespace hzd {
 
         qRegisterMetaType<cv::Mat>("cv::Mat");
         qRegisterMetaType<ConfigurePackage>("ConfigurePackage");
+        // 更新视频显示
         connect(
-          ui->videoWidget->videoThread.get(),
-          &VideoThread::newFrame,
-          ui->videoWidget,
-          &VideoWidget::paintFrame
+            ui->videoWidget->videoThread.get(),
+            &VideoThread::newFrame,
+            ui->videoWidget,
+            &VideoWidget::paintFrame
         );
-
+        // 切换运行方案
         connect(
-          this,
-          &HomePage::config,
-          ui->videoWidget->videoThread.get(),
-          &VideoThread::config
+            this,
+            &HomePage::config,
+            ui->videoWidget->videoThread.get(),
+            &VideoThread::config
         );
+        // 添加新纪录
         connect(
             ui->videoWidget->videoThread.get(),
             &VideoThread::addTableItem,
             this,
             &HomePage::AddTableItem
         );
+        // 暂停运行方案
         connect(
-                this,
-                &HomePage::stop,
-                ui->videoWidget->videoThread.get(),
-                &VideoThread::stop
+            this,
+            &HomePage::stop,
+            ui->videoWidget->videoThread.get(),
+            &VideoThread::stop
         );
+        // 报错信息
         connect(
-          ui->videoWidget->videoThread.get(),
-          &VideoThread::error,
-          this,
-          [&](QString errorStr) {
+            ui->videoWidget->videoThread.get(),
+            &VideoThread::error,
+            this,
+            [&](QString errorStr) {
               QMessageBox::critical(this,"错误",errorStr);
-          }
+            }
         );
+        // 通知信息
         connect(
-          ui->videoWidget->videoThread.get(),
-          &VideoThread::info,
-          this,
-          [&](QString errorStr) {
-              QMessageBox::information(this,"错误",errorStr);
-          }
+            ui->videoWidget->videoThread.get(),
+            &VideoThread::info,
+            this,
+            [&](QString infoStr) {
+              QMessageBox::information(this,"info",infoStr);
+            }
         );
 
 //        auto* loginForm = new LoginForm(ui->videoWidget->videoThread->client,this);
 //        loginForm->show();
         if(!ui->videoWidget->videoThread->client.Connect("127.0.0.1",9999)){
             QMessageBox::critical(this,"失败","连接失败...");
-            return;
+            exit(-1);
         }
         ui->videoWidget->videoThread->client.isConnected = true;
         QMessageBox::information(nullptr,"成功","连接成功!");
@@ -192,7 +198,9 @@ namespace hzd {
     }
 
     HomePage::~HomePage() {
+        // 等待视频线程退出
         ui->videoWidget->videoThread->Wait();
+        // 持久化方案信息
         for(auto& solution : solutionMap) {
             const auto& name = solution.second->configurePackage.name;
             auto dirPath = "./solutions/" + name + "/";
@@ -217,12 +225,15 @@ namespace hzd {
     void HomePage::AddSolution(const std::string& path) {
         auto* solution = new SolutionItem(nullptr,solutionIndex);
         solutionMap[solutionIndex] = solution;
+        // 非新记录
         if(!path.empty()){
             if(!solution->configurePackage.Deserialize(path + ".json")) return;
+            // 读取.flow文件
             QFile file((path + ".flow").c_str());
             if(!file.open(QIODevice::ReadOnly)) return;
             solution->editorFlowJson = QJsonDocument::fromJson(file.readAll()).object();
             file.close();
+            // 导入flow文件内容
             auto nodes = solution->editorFlowJson["nodes"];
             auto nodesArray = nodes.toArray();
             for(const auto& node : nodesArray) {

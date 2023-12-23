@@ -26,12 +26,17 @@ namespace hzd {
     public:
         explicit HomePage(QWidget *parent = nullptr);
         ~HomePage() override;
+        // 添加新方案
         void AddSolution(const std::string& path = "");
+        // 清空记录信息
         void ClearTableItem();
     signals:
+        // 暂停信号
         void stop();
+        // 运行信号
         void config(int solutionId,ConfigurePackage configurePackage,QJsonObject flowJson);
     public slots:
+        // 添加一条新纪录
         void AddTableItem(QString time,QString procedure,bool isSuccess,QString reason = "");
     private:
         Ui::HomePage *ui;

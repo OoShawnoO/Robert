@@ -86,7 +86,6 @@ namespace hzd {
                 }
             }
         });
-        ioThread.detach();
     }
 
     void VideoThread::run() {
@@ -193,6 +192,7 @@ namespace hzd {
         isStop = true;
         isRun = true;
         wait();
+        if(ioThread.joinable()) ioThread.join();
     }
 
     void VideoThread::stop() {
