@@ -91,11 +91,14 @@ namespace hzd {
     void VideoThread::run() {
         cv::Mat mat;
         json json;
+        std::clock_t clock;
         while(!isStop) {
             // 暂停
             while(!isRun) {
-                msleep(10);
+                msleep(20);
             }
+
+            clock = std::clock();
 
             if(isConfig) {
                 std::lock_guard<std::mutex> guard(mtx);
@@ -131,7 +134,7 @@ namespace hzd {
                 }
                 makeFrame("link interflow...");
                 client.pInterflow.reset();
-                msleep(10);
+                usleep(100);
                 client.pInterflow = std::make_shared<Interflow>(
                     false,
                     configurePackage.interflowConfigure.isTcp,
@@ -147,11 +150,11 @@ namespace hzd {
             }
             if(!sendControlPacket(frameId++,Work,Right)){
                 error("发送控制包失败!");
-                return;
+                break;
             }
             if(!client.pInterflow->ReceiveItem(mat,json)){
                 error("接收帧错误！");
-                return;
+                break;
             }
             emit newFrame(mat);
 
@@ -159,7 +162,7 @@ namespace hzd {
                 writeChan.push({WriteProp::Write,mat.clone()});
             }
 
-            if(json["code"] != 0) {
+            if(json["code"] != 1) {
                 QString time = std::string(json["time"]).c_str();
                 QString procedure = std::string(json["procedure"]).c_str();
                 int status = json["code"];
@@ -169,21 +172,29 @@ namespace hzd {
                         if(isSaveVideo) writeChan.push({WriteProp::Release,{}});
                         emit addTableItem(time,procedure,true,"");
                     }
-                    // NotSuccess
+                        // NotSuccess
                     case 2 : {
                         if(isSaveVideo) writeChan.push({WriteProp::Release,{}});
                         for(const auto& reason : json["failedReason"]) {
                             emit addTableItem(time,procedure,false,std::string(reason).c_str());
                         }
                     }
-                    // Start
+                        // Start
                     case 3 : {
                         videoName = time.toStdString() + ".mp4";
                         if(isSaveVideo) writeChan.push({WriteProp::Open,mat.clone()});
                     }
+                    default : {
+                        break;
+                    }
                 }
             }
-            msleep(10);
+
+            clock = std::clock() - clock;
+            clock = 34 - clock/1000;
+            clock = clock > 0 ? clock : 0;
+            msleep(clock);
+
         }
         writeChan.push();
     }
@@ -208,10 +219,7 @@ namespace hzd {
 
     bool VideoThread::acquireOk() {
         std::string flag;
-        if(client.Recv(flag,2,false) < 0 || flag != "ok") {
-            return false;
-        }
-        return true;
+        return !(client.Recv(flag,2,false) < 0 || flag != "ok");
     }
 
     void VideoThread::makeFrame(const std::string& text) {

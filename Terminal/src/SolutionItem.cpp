@@ -13,23 +13,23 @@
 #include "ui_SolutionItem.h"
 
 namespace hzd {
-    SolutionItem::SolutionItem(QWidget *parent,int _id) :
-            QWidget(parent), ui(new Ui::SolutionItem),id(_id) {
+    SolutionItem::SolutionItem(QWidget *parent, int _id) :
+            QWidget(parent), ui(new Ui::SolutionItem), id(_id) {
         ui->setupUi(this);
         ui->stop->hide();
         connect(
-            ui->editConfig,
-            &QPushButton::clicked,
-            this,
-            [&]{
-                emit editConfigSignal();
-            }
+                ui->editConfig,
+                &QPushButton::clicked,
+                this,
+                [&] {
+                    emit editConfigSignal();
+                }
         );
         connect(
                 ui->editMission,
                 &QPushButton::clicked,
                 this,
-                [&]{
+                [&] {
                     emit editMissionSignal();
                 }
         );
@@ -37,7 +37,7 @@ namespace hzd {
                 ui->start,
                 &QPushButton::clicked,
                 this,
-                [&]{
+                [&] {
                     ui->stop->show();
                     ui->start->hide();
                     emit runSignal();
@@ -47,19 +47,19 @@ namespace hzd {
                 ui->stop,
                 &QPushButton::clicked,
                 this,
-                [&]{
+                [&] {
                     ui->start->show();
                     ui->stop->hide();
                     emit stopSignal();
                 }
         );
         connect(
-          ui->deleteItem,
-          &QPushButton::clicked,
-          this,
-          [&]{
-              emit deleteSignal();
-          }
+                ui->deleteItem,
+                &QPushButton::clicked,
+                this,
+                [&] {
+                    emit deleteSignal();
+                }
         );
     }
 
