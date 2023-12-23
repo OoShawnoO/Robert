@@ -323,8 +323,12 @@ namespace hzd {
         ui->resultTable->setItem(0,2,new QTableWidgetItem(isSuccess ? "success" : "failed"));
         if(isSuccess){
             ui->resultTable->item(0,2)->setBackground(QBrush(QColor{0,255,0}));
+            successCount++;
+            ui->successRecord->setText(std::to_string(successCount).c_str());
         }else{
             ui->resultTable->item(0,2)->setBackground(QBrush(QColor{255,0,0}));
+            failedCount++;
+            ui->successRecord->setText(std::to_string(failedCount).c_str());
         }
         ui->resultTable->setItem(0,3,new QTableWidgetItem(reason));
         for(int i=0;i<4;i++) {
@@ -334,6 +338,8 @@ namespace hzd {
     }
 
     void HomePage::ClearTableItem() {
+        successCount = 0;
+        failedCount = 0;
         ui->resultTable->clearContents();
     }
 

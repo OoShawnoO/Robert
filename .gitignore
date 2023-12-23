@@ -35,4 +35,10 @@
 test
 cmake-build-debug
 .idea
+
+# Binary
 Terminal/bin/Terminal
+Service/bin/Service
+
+# Media
+*.mp4

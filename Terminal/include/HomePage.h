@@ -40,6 +40,8 @@ namespace hzd {
         void AddTableItem(QString time,QString procedure,bool isSuccess,QString reason = "");
     private:
         Ui::HomePage *ui;
+        int successCount{0};
+        int failedCount{0};
         int solutionIndex{0};
         int lastSolutionIndex{-1};
         std::unordered_map<int,SolutionItem*> solutionMap;
