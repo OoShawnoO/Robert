@@ -97,6 +97,7 @@ namespace hzd {
             while(!isRun) {
                 msleep(20);
             }
+            if(isStop) break;
 
             clock = std::clock();
 
@@ -162,7 +163,7 @@ namespace hzd {
                 writeChan.push({WriteProp::Write,mat.clone()});
             }
 
-            if(json["code"] != 1) {
+            if(json["code"] != 0) {
                 QString time = std::string(json["time"]).c_str();
                 QString procedure = std::string(json["procedure"]).c_str();
                 int status = json["code"];

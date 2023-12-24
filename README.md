@@ -67,4 +67,6 @@ Robert 将被开发用于多模型同时推理与交互，图形化编辑器形�
   Utility tools,such as log、thread-safe queue、configure control and so on.
   
   通用工具,日志、线程安全队列、配置文件管理等。
-    
+
+## Interactive process / 交互流程
+![](doc/单机交互流程.svg)
