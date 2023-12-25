@@ -9,6 +9,7 @@
 
 // You may need to build the project (run Qt uic code generator) to get "ui_ConfigPage.h" resolved
 
+#include <QFileDialog>
 #include "ConfigPage.h"
 #include "ui_ConfigPage.h"
 #include "YoloConfigPage.h"
@@ -50,7 +51,7 @@ namespace hzd {
             }else{
                 ui->oneshotCheckBox->setCheckState(Qt::CheckState::Unchecked);
             }
-            ui->fileEdit->setText(missionReactorConfigure.missionFilePath.c_str());
+            ui->missionEdit->setText(missionReactorConfigure.missionFilePath.c_str());
             ui->analysisEdit->setText(std::to_string(missionReactorConfigure.analysisFrameCount).c_str());
             ui->startEdit->setText(std::to_string(missionReactorConfigure.startTolerance).c_str());
             ui->endEdit->setText(std::to_string(missionReactorConfigure.endTolerance).c_str());
@@ -71,6 +72,7 @@ namespace hzd {
             ui->myPortEdit->setText(std::to_string(interflowConfigure.myPort).c_str());
             ui->destIpEdit->setText(interflowConfigure.destIpAddr.c_str());
             ui->destPortEdit->setText(std::to_string(interflowConfigure.destPort).c_str());
+            ui->modelList->clear();
             tempYoloConfigures = yoloConfigures;
 
             for(const auto& yoloConfigure : tempYoloConfigures) {
@@ -106,7 +108,7 @@ namespace hzd {
             serverConfigure.reactorCount = ui->reactorEdit->text().toInt();
             serverConfigure.isEdgeTrigger = ui->etCheckBox->isChecked();
             serverConfigure.isOneShot = ui->oneshotCheckBox->isChecked();
-            missionReactorConfigure.missionFilePath = ui->fileEdit->text().toStdString();
+            missionReactorConfigure.missionFilePath = ui->missionEdit->text().toStdString();
             missionReactorConfigure.analysisFrameCount = ui->analysisEdit->text().toInt();
             missionReactorConfigure.startTolerance = ui->startEdit->text().toDouble();
             missionReactorConfigure.endTolerance = ui->endEdit->text().toDouble();
@@ -167,6 +169,34 @@ namespace hzd {
               tempYoloConfigures.erase(tempYoloConfigures.begin() + ui->modelList->currentIndex().row());
               delete ui->modelList->currentItem();
           }
+        );
+        // 选择任务文件
+        connect(
+            ui->selectMission,
+            &QPushButton::clicked,
+            this,
+            [&]{
+                ui->missionEdit->setText(QFileDialog::getOpenFileName(
+                        this,
+                        "选择任务文件文件路径(.mission)",
+                        "./",
+                        "Mission(*.mission)"
+                ));
+            }
+        );
+        // 选择视频url
+        connect(
+                ui->selectVideo,
+                &QPushButton::clicked,
+                this,
+                [&]{
+                    ui->urlEdit->setText(QFileDialog::getOpenFileName(
+                            this,
+                            "选择任务文件文件路径(.*)",
+                            "./",
+                            "*"
+                    ));
+                }
         );
         // item双击
         connect(

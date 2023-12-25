@@ -27,7 +27,7 @@ namespace hzd {
     class VideoThread : public QThread {
         Q_OBJECT
         std::mutex mtx;
-        int currentSolutionId{-1};
+        long currentSolutionId{-1};
         ConfigurePackage configurePackage;
         QJsonObject flowJson;
         int         frameId{0};
@@ -54,7 +54,7 @@ namespace hzd {
         void info(QString infoStr);
     public slots:
         void stop();
-        void config(int solutionId,ConfigurePackage configurePackage,QJsonObject flowJson);
+        void config(long solutionId,ConfigurePackage configurePackage,QJsonObject flowJson);
     signals:
         void newFrame(cv::Mat mat);
     };

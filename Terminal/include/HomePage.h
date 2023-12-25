@@ -27,14 +27,14 @@ namespace hzd {
         explicit HomePage(QWidget *parent = nullptr);
         ~HomePage() override;
         // 添加新方案
-        void AddSolution(const std::string& path = "");
+        void AddSolution(long id,bool isExist = false);
         // 清空记录信息
         void ClearTableItem();
     signals:
         // 暂停信号
         void stop();
         // 运行信号
-        void config(int solutionId,ConfigurePackage configurePackage,QJsonObject flowJson);
+        void config(long solutionId,ConfigurePackage configurePackage,QJsonObject flowJson);
     public slots:
         // 添加一条新纪录
         void AddTableItem(QString time,QString procedure,bool isSuccess,QString reason = "");
@@ -42,9 +42,8 @@ namespace hzd {
         Ui::HomePage *ui;
         int successCount{0};
         int failedCount{0};
-        int solutionIndex{0};
-        int lastSolutionIndex{-1};
-        std::unordered_map<int,SolutionItem*> solutionMap;
+        long lastSolutionId{-1};
+        std::unordered_map<long,SolutionItem*> solutionMap;
     };
 } // hzd
 

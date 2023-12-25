@@ -23,8 +23,9 @@ namespace hzd {
     Q_OBJECT
 
     public:
-        explicit SolutionItem(QWidget *parent = nullptr,int id = 0);
-        int id{0};
+        explicit SolutionItem(long id,std::string fileName,QWidget *parent = nullptr);
+        long id{0};
+        std::string fileName{};
         ~SolutionItem() override;
         ConfigurePackage configurePackage;
         QJsonObject      editorFlowJson;

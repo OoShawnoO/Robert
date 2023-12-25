@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1243</width>
-    <height>809</height>
+    <height>842</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -259,10 +259,10 @@ QCheckBox::indicator:checked:hover {
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="fileEdit"/>
+             <widget class="QLineEdit" name="missionEdit"/>
             </item>
             <item>
-             <widget class="QPushButton" name="selectFile">
+             <widget class="QPushButton" name="selectMission">
               <property name="text">
                <string>选择文件</string>
               </property>
@@ -379,6 +379,13 @@ QCheckBox::indicator:checked:hover {
               </property>
               <property name="placeholderText">
                <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="selectVideo">
+              <property name="text">
+               <string>选择文件</string>
               </property>
              </widget>
             </item>

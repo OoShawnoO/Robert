@@ -13,8 +13,8 @@
 #include "ui_SolutionItem.h"
 
 namespace hzd {
-    SolutionItem::SolutionItem(QWidget *parent, int _id) :
-            QWidget(parent), ui(new Ui::SolutionItem), id(_id) {
+    SolutionItem::SolutionItem(long _id,std::string _fileName,QWidget *parent) :
+            QWidget(parent), ui(new Ui::SolutionItem), id(_id),fileName(std::move(_fileName)){
         ui->setupUi(this);
         ui->stop->hide();
         connect(
@@ -70,6 +70,7 @@ namespace hzd {
     void SolutionItem::updateUI() {
         ui->title->setText(configurePackage.name.c_str());
         ui->description->setText(configurePackage.description.c_str());
+        configurePackage.Serialize(fileName + ".json");
     }
 
     void SolutionItem::HideRunButton() {

@@ -49,7 +49,7 @@ namespace hzd {
         p.end();
     }
 
-    void VideoThread::config(int solutionId, ConfigurePackage _configurePackage, QJsonObject _flowJson) {
+    void VideoThread::config(long solutionId, ConfigurePackage _configurePackage, QJsonObject _flowJson) {
         mtx.lock();
         if(currentSolutionId != solutionId){
             currentSolutionId = solutionId;

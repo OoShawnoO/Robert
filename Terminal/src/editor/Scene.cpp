@@ -253,6 +253,13 @@ namespace hzd {
             return;
         }
         SaveJson(solutionItem.editorFlowJson);
+        QFile file((solutionItem.fileName + ".flow").c_str());
+        if (!file.open(QIODevice::WriteOnly)) {
+            QMessageBox::critical(nullptr, "错误", "无法创建文件");
+            return;
+        }
+        file.write(json);
+        file.close();
     }
 
     void Scene::SaveAndGenerate() {

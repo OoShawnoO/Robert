@@ -112,6 +112,9 @@ namespace hzd {
                                 "      background: rgba(64, 65, 79, 0);\n"
                                 "      }");
         /* endregion */
+        // 注册 Meta 数据
+        qRegisterMetaType<cv::Mat>("cv::Mat");
+        qRegisterMetaType<ConfigurePackage>("ConfigurePackage");
 
         // 读取已存在方案
         DIR *dir;
@@ -121,7 +124,7 @@ namespace hzd {
             if (ptr->d_type != DT_DIR) continue;
             std::string name = ptr->d_name;
             if (name == "." || name == "..") continue;
-            AddSolution(std::string("./solutions/") + ptr->d_name + "/" + ptr->d_name);
+            AddSolution(std::stol(ptr->d_name),true);
         }
         closedir(dir);
 
@@ -131,12 +134,9 @@ namespace hzd {
                 &QPushButton::clicked,
                 this,
                 [&] {
-                    AddSolution();
+                    AddSolution(time(nullptr));
                 }
         );
-
-        qRegisterMetaType<cv::Mat>("cv::Mat");
-        qRegisterMetaType<ConfigurePackage>("ConfigurePackage");
         // 更新视频显示
         connect(
                 ui->videoWidget->videoThread.get(),
@@ -199,120 +199,110 @@ namespace hzd {
     HomePage::~HomePage() {
         // 等待视频线程退出
         ui->videoWidget->videoThread->Wait();
-        // 持久化方案信息
-        for (auto &solution: solutionMap) {
-            const auto &name = solution.second->configurePackage.name;
-            auto dirPath = "./solutions/" + name + "/";
-            if (!std::filesystem::exists(dirPath) && !std::filesystem::create_directories(dirPath)) {
-                QMessageBox::critical(nullptr, "错误", "无法创建目录");
-                continue;
-            }
-            solution.second->configurePackage.Serialize(dirPath + name + ".json");
-            auto json = QJsonDocument(solution.second->editorFlowJson).toJson();
-            QFile file((dirPath + name + ".flow").c_str());
-            if (!file.open(QIODevice::WriteOnly)) {
-                QMessageBox::critical(nullptr, "错误", "无法创建文件");
-                continue;
-            }
-            file.write(json);
-            file.close();
-            Scene::Generate(solution.second->editorFlowJson, dirPath + name);
-        }
         delete ui;
     }
 
-    void HomePage::AddSolution(const std::string &path) {
-        auto *solution = new SolutionItem(nullptr, solutionIndex);
-        solutionMap[solutionIndex] = solution;
-        // 非新记录
-        if (!path.empty()) {
-            if (!solution->configurePackage.Deserialize(path + ".json")) return;
+    void HomePage::AddSolution(long id,bool isExist) {
+        static const std::string rootPath = "./solutions/";
+        std::string idStr = std::to_string(id);
+        std::string fileNameWithOutTypePath = rootPath + idStr + "/" + idStr;
+
+        if(!isExist) { std::filesystem::create_directories(rootPath + idStr); }
+
+        auto* solution = new SolutionItem(id,fileNameWithOutTypePath);
+        solutionMap[id] = solution;
+        if(isExist) {
+            if(!solution->configurePackage.Deserialize(fileNameWithOutTypePath + ".json")){
+                QMessageBox::critical(nullptr,"错误","无法打开配置文件!");
+                return;
+            }
             // 读取.flow文件
-            QFile file((path + ".flow").c_str());
-            if (!file.open(QIODevice::ReadOnly)) return;
-            solution->editorFlowJson = QJsonDocument::fromJson(file.readAll()).object();
-            file.close();
-            // 导入flow文件内容
-            auto nodes = solution->editorFlowJson["nodes"];
-            auto nodesArray = nodes.toArray();
-            for (const auto &node: nodesArray) {
-                auto internalData = node.toObject()["internal-data"].toObject();
-                QString modelName = internalData["model-name"].toString();
-                if (modelName == "结算器") {
-                    BaseModel::broadcaster.Deserialize(internalData["nameIdMap"]);
-                    break;
+            QFile file((fileNameWithOutTypePath + ".flow").c_str());
+            if (file.open(QIODevice::ReadOnly)) {
+                solution->editorFlowJson = QJsonDocument::fromJson(file.readAll()).object();
+                file.close();
+                // 导入flow文件内容
+                auto nodes = solution->editorFlowJson["nodes"];
+                auto nodesArray = nodes.toArray();
+                for (const auto &node: nodesArray) {
+                    auto internalData = node.toObject()["internal-data"].toObject();
+                    QString modelName = internalData["model-name"].toString();
+                    if (modelName == "结算器") {
+                        BaseModel::broadcaster.Deserialize(internalData["nameIdMap"]);
+                        break;
+                    }
                 }
             }
-
             solution->updateUI();
-//            if(std::filesystem::remove_all(path.substr(0,path.find_last_of('/')).c_str()) < 0) {
-//                QMessageBox::critical(nullptr,"错误",path.substr(0,path.find_last_of('/')).c_str());
-//                return;
-//            }
         }
+        // 新记录
         ui->solutions->insertWidget(0, solution);
+
         // 编辑配置
         connect(
-                solution,
-                &SolutionItem::editConfigSignal,
-                this,
-                [=] {
-                    auto *configPage = new ConfigPage(nullptr, &solution->configurePackage);
-                    connect(
-                            configPage,
-                            &ConfigPage::finish,
-                            solution,
-                            &SolutionItem::updateUI
-                    );
-                    configPage->show();
-                }
+            solution,
+            &SolutionItem::editConfigSignal,
+            this,
+            [=] {
+                auto *configPage = new ConfigPage(nullptr, &solution->configurePackage);
+                connect(
+                        configPage,
+                        &ConfigPage::finish,
+                        solution,
+                        &SolutionItem::updateUI
+                );
+                configPage->show();
+            }
         );
         // 编辑任务
         connect(
-                solution,
-                &SolutionItem::editMissionSignal,
-                this,
-                [=] {
-                    auto *editor = new Editor(*solution);
-                    editor->setAttribute(Qt::WA_DeleteOnClose);
-                    editor->show();
-                }
+            solution,
+            &SolutionItem::editMissionSignal,
+            this,
+            [=] {
+                auto *editor = new Editor(*solution);
+                editor->setAttribute(Qt::WA_DeleteOnClose);
+                editor->show();
+            }
         );
         // 运行
         connect(
-                solution,
-                &SolutionItem::runSignal,
-                this,
-                [=, this] {
-                    if (lastSolutionIndex != -1 && lastSolutionIndex != solution->id) {
-                        solutionMap[lastSolutionIndex]->HideRunButton();
-                        ClearTableItem();
-                    }
-                    emit config(solution->id, solution->configurePackage, solution->editorFlowJson);
-                    lastSolutionIndex = solution->id;
+            solution,
+            &SolutionItem::runSignal,
+            this,
+            [=, this] {
+                if (lastSolutionId != -1 && lastSolutionId != solution->id) {
+                    solutionMap[lastSolutionId]->HideRunButton();
+                    ClearTableItem();
                 }
+                emit config(solution->id, solution->configurePackage, solution->editorFlowJson);
+                lastSolutionId = solution->id;
+            }
         );
         // 暂停
         connect(
-                solution,
-                &SolutionItem::stopSignal,
-                this,
-                [&] {
-                    emit stop();
-                }
+            solution,
+            &SolutionItem::stopSignal,
+            this,
+            [&] {
+                emit stop();
+            }
         );
         // 删除
         connect(
-                solution,
-                &SolutionItem::deleteSignal,
-                this,
-                [=, this] {
-                    solutionMap[solution->id]->hide();
-                    solutionMap.erase(solution->id);
-                    ui->solutions->update();
+            solution,
+            &SolutionItem::deleteSignal,
+            this,
+            [=, this] {
+                solutionMap[solution->id]->hide();
+                solutionMap.erase(solution->id);
+                ui->solutions->update();
+                if(!std::filesystem::remove_all(fileNameWithOutTypePath.substr(0,fileNameWithOutTypePath.find_last_of('/')).c_str())) {
+                    QMessageBox::critical(nullptr,"错误",fileNameWithOutTypePath.substr(0,fileNameWithOutTypePath.find_last_of('/')).c_str());
+                    return;
                 }
+            }
         );
-        solutionIndex++;
     }
 
     void HomePage::AddTableItem(QString time, QString procedure, bool isSuccess, QString reason) {
