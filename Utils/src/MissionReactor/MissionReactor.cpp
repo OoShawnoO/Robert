@@ -192,7 +192,10 @@ namespace hzd {
         if(finished.size() < workMissions.size()) finished.resize(workMissions.size(),false);
         switch(settlement.status) {
             case Settlement::Wait : {
-
+                if(settlement.startItems[0] == -1) {
+                    settlement.status = Settlement::Start;
+                    break;
+                }
                 switch(settlement.startType) {
                     case Settlement::StartItemAppear : {
                         JUDGE_APPEAR_START;
@@ -244,7 +247,6 @@ namespace hzd {
                         break;
                     }
                 }
-
                 break;
             }
             case Settlement::Start : {
@@ -258,90 +260,90 @@ namespace hzd {
             }
             case Settlement::Running : {
                 for(auto index = 0; index < workMissions.size(); index++) {
-                    if(finished[index]) continue;
+                    if (finished[index]) continue;
                     int ret = workMissions[index]->operator()(
                             input.itemVecMap,
                             fps,
                             mainMissionName,
                             signalMap
                     );
-                    if(ret < 0) {
+                    if (ret < 0) {
                         finished[index] = true;
                         runtimeProcess.emplace_back(workMissions[index]->index);
                         settlement.status = Settlement::End;
-                    }else if(ret == 1){
+                    } else if (ret == 1) {
                         finished[index] = true;
                         runtimeProcess.emplace_back(workMissions[index]->index);
-                        if(std::all_of(finished.begin(),finished.end(),[](bool b){return b;})){
+                        if (std::all_of(finished.begin(), finished.end(), [](bool b) { return b; })) {
                             settlement.status = Settlement::End;
                             break;
                         }
                     }
-                    if(settlement.endItems[0] == -1) break;
+                }
+                if(settlement.endItems[0] == -1) break;
 
-                    switch(settlement.endType) {
-                        case Settlement::EndItemDisappear: {
-                            JUDGE_APPEAR_END;
-                            bool flag = true;
-                            for(const auto& item : settlement.endItems) {
-                                flag &= input.itemVecMap.find(item) == input.itemVecMap.end();
-                            }
-                            END_JUDGE_APPEAR_END;
-                            break;
+                switch(settlement.endType) {
+                    case Settlement::EndItemDisappear: {
+                        JUDGE_APPEAR_END;
+                        bool flag = true;
+                        for(const auto& item : settlement.endItems) {
+                            flag &= input.itemVecMap.find(item) == input.itemVecMap.end();
                         }
-                        case Settlement::EndItemAppearInBound: {
-                            JUDGE_APPEAR_END;
-                            bool flag = true;
-                            try {
-                                auto items = input.itemVecMap.at(settlement.endItems[0]);
-                                for(const auto& item : items ) {
-                                    flag = Item::Consist(settlement.endBound,item);
-                                    if(flag) break;
-                                }
-                            }catch (...) {
-                                flag = false;
+                        END_JUDGE_APPEAR_END;
+                        break;
+                    }
+                    case Settlement::EndItemAppearInBound: {
+                        JUDGE_APPEAR_END;
+                        bool flag = true;
+                        try {
+                            auto items = input.itemVecMap.at(settlement.endItems[0]);
+                            for(const auto& item : items ) {
+                                flag = Item::Consist(settlement.endBound,item);
+                                if(flag) break;
                             }
-                            END_JUDGE_APPEAR_END;
-                            break;
+                        }catch (...) {
+                            flag = false;
                         }
-                        case Settlement::EndItemStayInBound: {
-                            if(historyResult.size() >= fps * settlement.endDuration){
-                                if(flagCount > (long)(fps * settlement.endDuration * endTolerance)){
-                                    settlement.status = Settlement::End;
-                                    break;
-                                }
+                        END_JUDGE_APPEAR_END;
+                        break;
+                    }
+                    case Settlement::EndItemStayInBound: {
+                        if(historyResult.size() >= fps * settlement.endDuration){
+                            if(flagCount > (long)(fps * settlement.endDuration * endTolerance)){
+                                settlement.status = Settlement::End;
+                                break;
                             }
-                            bool flag = false;
-                            try {
-                                auto items = input.itemVecMap.at(settlement.endItems[0]);
-                                for(const auto& item : items ) {
-                                    flag = Item::Consist(settlement.endBound,item);
-                                    if(flag) break;
-                                }
-                            } catch(...) {
-                                flag = false;
-                            }
-                            if(flag) flagCount++;
-                            if(historyResult.size() > fps * settlement.endDuration * 2) {
-                                if(historyResult.front()) flagCount--;
-                                historyResult.pop_front();
-                            }
-                            break;
                         }
-                        case Settlement::EndItemDisappearInBound: {
-                            JUDGE_APPEAR_END;
-                            bool flag = true;
-                            try {
-                                auto items = input.itemVecMap.at(settlement.endItems[0]);
-                                for(const auto& item : items ) {
-                                    flag &= !Item::Consist(settlement.endBound,item);
-                                }
-                            }catch (...) {
-                                flag = false;
+                        bool flag = false;
+                        try {
+                            auto items = input.itemVecMap.at(settlement.endItems[0]);
+                            for(const auto& item : items ) {
+                                flag = Item::Consist(settlement.endBound,item);
+                                if(flag) break;
                             }
-                            END_JUDGE_APPEAR_END;
-                            break;
+                        } catch(...) {
+                            flag = false;
                         }
+                        if(flag) flagCount++;
+                        if(historyResult.size() > fps * settlement.endDuration * 2) {
+                            if(historyResult.front()) flagCount--;
+                            historyResult.pop_front();
+                        }
+                        break;
+                    }
+                    case Settlement::EndItemDisappearInBound: {
+                        JUDGE_APPEAR_END;
+                        bool flag = true;
+                        try {
+                            auto items = input.itemVecMap.at(settlement.endItems[0]);
+                            for(const auto& item : items ) {
+                                flag &= !Item::Consist(settlement.endBound,item);
+                            }
+                        }catch (...) {
+                            flag = false;
+                        }
+                        END_JUDGE_APPEAR_END;
+                        break;
                     }
                 }
                 break;

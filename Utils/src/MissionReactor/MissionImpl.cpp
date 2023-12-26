@@ -167,7 +167,7 @@ namespace hzd {
                 startSignals.push_back(parameters[9+index].asInt32());
             }
             for(auto index = 1;index <= endSignalCount;index++ ){
-                startSignals.push_back(parameters[9+endSignalCount+index].asInt32());
+                endSignals.push_back(parameters[9+endSignalCount+index].asInt32());
             }
             isInit = true;
         }
@@ -262,7 +262,7 @@ namespace hzd {
                 startSignals.push_back(parameters[11+index].asInt32());
             }
             for(auto index = 1;index <= endSignalCount;index++ ){
-                startSignals.push_back(parameters[11+endSignalCount+index].asInt32());
+                endSignals.push_back(parameters[11+endSignalCount+index].asInt32());
             }
             isInit = true;
         }
@@ -366,7 +366,7 @@ namespace hzd {
                 startSignals.push_back(parameters[15+index].asInt32());
             }
             for(auto index = 1;index <= endSignalCount;index++ ){
-                startSignals.push_back(parameters[15+endSignalCount+index].asInt32());
+                endSignals.push_back(parameters[15+endSignalCount+index].asInt32());
             }
             isInit = true;
         }

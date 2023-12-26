@@ -180,10 +180,18 @@ namespace hzd {
                             emit addTableItem(time,procedure,false,std::string(reason).c_str());
                         }
                     }
-                        // Start
+                    // Start
                     case 3 : {
                         videoName = time.toStdString() + ".mp4";
                         if(isSaveVideo) writeChan.push({WriteProp::Open,mat.clone()});
+                        break;
+                    }
+                    // End
+                    case 4 : {
+                        isRun = false;
+                        currentSolutionId = -1;
+                        makeFrame("wait new config");
+                        continue;
                     }
                     default : {
                         break;
@@ -195,7 +203,6 @@ namespace hzd {
             clock = 34 - clock/1000;
             clock = clock > 0 ? clock : 0;
             msleep(clock);
-
         }
         writeChan.push();
     }

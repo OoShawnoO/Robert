@@ -34,7 +34,8 @@ namespace hzd {
             None = 0,
             Success = 1,
             NotSuccess = 2,
-            Start = 3
+            Start = 3,
+            End = 4
         };
 
         struct Res {

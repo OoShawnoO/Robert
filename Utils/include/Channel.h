@@ -26,6 +26,11 @@ namespace hzd {
           */
         void signal();
         /**
+         * @brief 信号量自增一并唤醒所有阻塞 / semaphore plus 1 and awake all block thread
+         * @retval None
+         */
+        void signalAll();
+        /**
           * @brief 信号量小于一将阻塞,否则自减一 / block if semaphore less than 1,else semaphore sub 1
           * @retval None
           */

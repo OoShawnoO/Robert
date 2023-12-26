@@ -26,4 +26,10 @@ namespace hzd{
         if (count < 0)  cond.wait(unique);
     }
 
+    void Semaphore::signalAll() {
+        std::unique_lock<std::mutex> unique(mtx);
+        ++count;
+        if (count <= 0) cond.notify_all();
+    }
+
 }

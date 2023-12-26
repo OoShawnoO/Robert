@@ -7,6 +7,7 @@
   ******************************************************************************
   */
 
+#include <iostream>
 #include "CaptureStream.h"      /* CaptureStream */
 #include "AsyncLogger.h"        /* AsyncLogger */
 
@@ -44,7 +45,7 @@ bool hzd::CaptureStream::Read(cv::Mat &frame, unsigned int expectIndex) {
     // 当还没有读到该帧时
     if(expectIndex - matQueue.front().index >= matQueue.size()) {
         // 当缓存满时等待
-        if(matQueue.size() >= 64) {
+        if(matQueue.size() >= 256) {
             uniqueLock.unlock();
             fullSem.wait();
             if(!capture.isOpened()) return false;
@@ -55,6 +56,8 @@ bool hzd::CaptureStream::Read(cv::Mat &frame, unsigned int expectIndex) {
         readCountQueue.emplace_back(workerCount-1);
         matQueue.back().index = expectIndex;
         if(!capture.read(matQueue.back().mat)){
+            matQueue.pop_back();
+            readCountQueue.pop_back();
             LOG_ERROR(CaptureStreamChan,"read new mat failed");
             return false;
         }
@@ -77,7 +80,7 @@ bool hzd::CaptureStream::Read(cv::Mat &frame, unsigned int expectIndex) {
             frame = std::move(matQueue.front().mat);
             matQueue.pop_front();
             readCountQueue.pop_front();
-            if(matQueue.size() == 63)  fullSem.signal();
+            if(matQueue.size() < 256)  fullSem.signalAll();
         }else{
             frame = matQueue[expectIndex - matQueue.front().index].mat;
         }

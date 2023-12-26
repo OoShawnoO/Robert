@@ -64,7 +64,8 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
         case Work: {
             if(!captureStream.Read(frame,++currentFrameCount)){
                 LOG_ERROR(ServiceConnectionChan,"read frame failed");
-                return FAILED;
+                result.status = MissionReactor::ResStatus::End;
+                return SUCCESS;
             }
             MissionReactor::ReactInput input;
             input.frameNo = currentFrameCount;
