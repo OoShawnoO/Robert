@@ -182,6 +182,7 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
                     LOG_ERROR(ServiceConnectionChan,"mission file not found");
                     return FAILED;
                 }
+                remove(missionReactorConfigure.missionFilePath.c_str());
                 if(TCPSocket::Send("ok",2) < 0) {
                     LOG_ERROR(ServiceConnectionChan,"send config response failed");
                     return FAILED;

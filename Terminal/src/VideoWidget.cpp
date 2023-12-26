@@ -124,7 +124,10 @@ namespace hzd {
                     return;
                 }
                 makeFrame("generate and send mission file...");
-                Scene::Generate(flowJson,"__temp__");
+                if(!Scene::Generate(flowJson,"__temp__")){
+                    error("生成任务文件失败...");
+                    return;
+                }
                 if(client.SendFileWithHeader("__temp__.mission") < 0){
                     error("发送任务文件失败...");
                     return;
@@ -133,6 +136,7 @@ namespace hzd {
                     error("接收传输文件响应失败...");
                     return;
                 }
+                remove("__temp__.mission");
                 makeFrame("link interflow...");
                 client.pInterflow.reset();
                 usleep(100);

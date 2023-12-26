@@ -12,7 +12,7 @@
 
 namespace hzd {
 
-#define MISSION_STANDARD_BEGIN do {                                            \
+#define MISSION_STANDARD_BEGIN do {                                             \
     for(const auto& startSignal : startSignals) {                               \
         if(!signalMap[startSignal]) return 0;                                   \
     }                                                                           \
@@ -20,8 +20,8 @@ namespace hzd {
     auto durationFrameCount = fps * duration / 1000;                            \
     if(records.size() >= durationFrameCount) {                                  \
         if(fps > 1 && rightCount > tolerance * durationFrameCount){             \
-        LOG_TRACE(mainMissionName,"[" + name + "事件完成]"                        \
-                          + std::to_string(rightCount * 1000 / fps) + "ms"      \
+            LOG_TRACE(mainMissionName,"[" + name + "事件完成]"                    \
+                          + std::to_string(rightCount * 1000 / fps) + "ms "     \
                           + "ItemAID:" + std::to_string(itemA) + ","            \
                           + "ItemBID:" + std::to_string(itemB) + ","            \
                           + "Bound.x:" + std::to_string(bound.x) + ","          \
@@ -29,15 +29,17 @@ namespace hzd {
                           + "Bound.width" + std::to_string(bound.width) + ","   \
                           + "Bound.height" + std::to_string(bound.height));     \
                                                                                 \
-        records.clear();                                                        \
-                                                                                \
-        for(const auto& endSignal : endSignals) {                               \
-            if(endSignal == 1024) return -1;                                    \
-                endSignal > 0 ?                                                 \
+            records.clear();                                                    \
+            rightCount = 0;                                                     \
+            bool isInterrupt = false;                                           \
+            for(const auto& endSignal : endSignals) {                           \
+                if(endSignal == 1024){ isInterrupt = true; continue;}           \
+                endSignal >= 0 ?                                                \
                 signalMap[endSignal] = true                                     \
                 :                                                               \
                 signalMap[-endSignal] = false;                                  \
             }                                                                   \
+            if(isInterrupt) return -1;                                          \
             return 1;                                                           \
         }                                                                       \
     }                                                                           \
@@ -45,8 +47,8 @@ namespace hzd {
 
 #define MISSION_STANDARD_END do {                                       \
     if(flag) rightCount++;                                              \
-        records.emplace_back(flag);                                     \
-        if(fps > 1 && records.size() > duration * fps / 1000 + 1) {     \
+    records.emplace_back(flag);                                         \
+    if(fps > 1 && records.size() > duration * fps / 1000 + 1) {         \
         if(records.front()) rightCount--;                               \
         records.pop_front();                                            \
     }                                                                   \
@@ -78,7 +80,7 @@ namespace hzd {
                 startSignals.push_back(parameters[9+index].asInt32());
             }
             for(auto index = 1;index <= endSignalCount;index++ ){
-                startSignals.push_back(parameters[9+endSignalCount+index].asInt32());
+                startSignals.push_back(parameters[9+startSignalCount+index].asInt32());
             }
             isInit = true;
         }
@@ -167,7 +169,7 @@ namespace hzd {
                 startSignals.push_back(parameters[9+index].asInt32());
             }
             for(auto index = 1;index <= endSignalCount;index++ ){
-                endSignals.push_back(parameters[9+endSignalCount+index].asInt32());
+                endSignals.push_back(parameters[9+startSignalCount+index].asInt32());
             }
             isInit = true;
         }
@@ -262,7 +264,7 @@ namespace hzd {
                 startSignals.push_back(parameters[11+index].asInt32());
             }
             for(auto index = 1;index <= endSignalCount;index++ ){
-                endSignals.push_back(parameters[11+endSignalCount+index].asInt32());
+                endSignals.push_back(parameters[11+startSignalCount+index].asInt32());
             }
             isInit = true;
         }
@@ -366,7 +368,7 @@ namespace hzd {
                 startSignals.push_back(parameters[15+index].asInt32());
             }
             for(auto index = 1;index <= endSignalCount;index++ ){
-                endSignals.push_back(parameters[15+endSignalCount+index].asInt32());
+                endSignals.push_back(parameters[15+startSignalCount+index].asInt32());
             }
             isInit = true;
         }

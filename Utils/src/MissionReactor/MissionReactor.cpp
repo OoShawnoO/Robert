@@ -280,7 +280,9 @@ namespace hzd {
                         }
                     }
                 }
-                if(settlement.endItems[0] == -1) break;
+                if(settlement.endItems[0] == -1) {
+                    break;
+                }
 
                 switch(settlement.endType) {
                     case Settlement::EndItemDisappear: {
@@ -384,14 +386,14 @@ namespace hzd {
     }
 
     bool MissionReactor::verify(MissionReactor::Res &res) const {
+        res.errorMissions.clear();
         for(const auto& mis : settlement.rightMissions) {
             if(std::find(runtimeProcess.begin(),runtimeProcess.end(),mis) == runtimeProcess.end()){
                 res.status = NotSuccess;
                 res.errorMissions.emplace_back(mis);
+                return false;
             }
-            if(res.status == NotSuccess) return false;
         }
-        res.errorMissions.clear();
         res.status = Success;
         return true;
     }
