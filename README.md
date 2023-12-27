@@ -53,14 +53,25 @@ Robert 将被开发用于多模型同时推理与交互，图形化编辑器形�
 ## Module / 模块
 - **Service**
     
-    Responsible for camera management, video stream processing, inference services, and process error correction.
-    
-    负责摄像头管理、视频流处理、推理服务及流程纠错等。
+  Responsible for camera management, video stream processing, inference services, and process error correction.
+  
+  负责摄像头管理、视频流处理、推理服务及流程纠错等。
+  
+  服务端结构
+![服务端](doc/服务端.svg)
+
 - **Terminal**
 
   Responsible for graphical user interface, customized process editing, and image display after processing.    
 
   负责图形化用户界面、客制化流程编辑、处理后图像显示等。
+
+  客户端截图
+![客户端](doc/客户端.png)
+  配置截图
+![配置](doc/配置.png)
+  任务编辑截图
+![任务编辑](doc/任务编辑.png)
 
 - **Utils**
 

@@ -153,6 +153,7 @@ namespace hzd {
                 );
                 isConfig = false;
             }
+
             if(!sendControlPacket(frameId++,Work,Right)){
                 error("发送控制包失败!");
                 break;
