@@ -17,11 +17,21 @@
 > - author: *microsoft*
 > - path: _Service/include/Yolo_
 > - url:_https://github.com/microsoft/onnxruntime.git
+> - install:
+>   ```shell
+>   wget https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-linux-x64-gpu-1.15.1.tgz
+>   tar -xzf onnxruntime-linux-x64-gpu-1.15.1.tgz
+>   ```
 
-> **OpenCV: Open Source Computer Vision Library 4.7.0 ↑**
+> **OpenCV: Open Source Computer Vision Library 4.5.0 ↑**
 > - author: *opencv*
 > - path: _Utils/include_
 > - url:_https://github.com/opencv/opencv.git_
+> - install: 
+>   ```shell
+>   # only for ubuntu
+>   sudo apt install libopencv-dev
+>   ```
 
 > **nodeedtior: Qt Node Editor. Dataflow programming framework 3.0.10 ↑**
 > - author: *paceholder*

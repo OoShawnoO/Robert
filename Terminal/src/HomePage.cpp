@@ -115,7 +115,11 @@ namespace hzd {
         // 注册 Meta 数据
         qRegisterMetaType<cv::Mat>("cv::Mat");
         qRegisterMetaType<ConfigurePackage>("ConfigurePackage");
-
+        // table widget column 宽度
+        ui->resultTable->setColumnWidth(0,100);
+        ui->resultTable->setColumnWidth(1,100);
+        ui->resultTable->setColumnWidth(2,100);
+        ui->resultTable->setColumnWidth(3,500);
         // 读取已存在方案
         DIR *dir;
         struct dirent *ptr;

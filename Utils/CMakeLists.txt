@@ -4,7 +4,7 @@ set(TARGET Utils)
 
 project(${TARGET})
 # Library Output Path
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
 # Third Party
 find_package(OpenCV REQUIRED)
@@ -17,6 +17,6 @@ link_directories(lib)
 aux_source_directory(src SRC)
 aux_source_directory(src/MissionReactor SRC)
 # Add Executable
-add_library(${TARGET} ${SRC})
+add_library(${TARGET} SHARED ${SRC})
 # Link Libraries
 target_link_libraries(${TARGET} ${OpenCV_LIBS})

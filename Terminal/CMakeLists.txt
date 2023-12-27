@@ -21,7 +21,7 @@ set(CMAKE_AUTORCC ON)
 
 file(GLOB_RECURSE HEADERS include/*.h)
 file(GLOB_RECURSE SRCS src/*.cpp)
-file(GLOB_RECURSE UTILS_SRCS ../Utils/src/*.cpp)
+#file(GLOB_RECURSE UTILS_SRCS ../Utils/src/*.cpp)
 file(GLOB_RECURSE UIS ui/*.ui)
 file(GLOB_RECURSE RES resources/*.qrc)
 
@@ -119,4 +119,5 @@ target_link_libraries(
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL
         QtNodes
         ${OpenCV_LIBS}
+        Utils
 )
