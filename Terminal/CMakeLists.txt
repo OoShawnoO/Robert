@@ -110,7 +110,8 @@ link_directories(../Utils/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 # Add Executable
 add_executable(${TARGET}
-        ${QTNODES_CPP_SOURCE_FILES} ${QTNODES_HPP_HEADER_FILES}
+#        ${QTNODES_CPP_SOURCE_FILES}
+        ${QTNODES_HPP_HEADER_FILES}
         ${HEADERS} ${SRCS} ${UTILS_SRCS} ${UIS} ${RES}
 )
 # Link Libraries

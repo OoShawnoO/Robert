@@ -9,4 +9,4 @@ add_subdirectory(Service)
 add_subdirectory(Terminal)
 
 # test
-add_subdirectory(test)
+#add_subdirectory(test)

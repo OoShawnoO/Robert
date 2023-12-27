@@ -47,19 +47,6 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::ReadCallback() {
 hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() {
     currentControl = controlPacket.control;
     switch(currentControl) {
-        // 客户端返回
-        case Ack: {
-            switch (controlPacket.mark) {
-                case Timeout : {
-                    // 跳过获取新帧操作
-                    return Connection::AfterReadCallback();
-                }
-                case Right : {
-                    // 跳出switch -> 执行Start对应操作获取下一帧数据
-                    break;
-                }
-            }
-        }
         // 客户端选择开始
         case Work: {
             if(!captureStream.Read(frame,++currentFrameCount)){
@@ -117,6 +104,19 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
             }
             result = missionReactor.React(input);
             break;
+        }
+        // 客户端返回
+        case Ack: {
+            switch (controlPacket.mark) {
+                case Timeout : {
+                    // 跳过获取新帧操作
+                    return Connection::AfterReadCallback();
+                }
+                case Right : {
+                    // 跳出switch -> 执行Start对应操作获取下一帧数据
+                    break;
+                }
+            }
         }
         // 客户端选择配置
         case Config : {
@@ -258,6 +258,7 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::WriteCallback() {
                 }
                 resultJson["failedReason"].emplace_back(std::move(reason));
             }
+            // 发送数据包
             if(!ptrInterflow->SendItem(frame,resultJson)){
                 LOG_ERROR(ServiceConnectionChan,std::string{"send item failed,error:"} + strerror(errno));
                 return FAILED;
