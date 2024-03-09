@@ -23,7 +23,6 @@ bool hzd::CaptureStream::Open(const std::string &url, unsigned int _workerCount)
     if(capture.isOpened()) {
         capture.release();
         matQueue.clear();
-        readCountQueue.clear();
     }
     workerCount = _workerCount;
     return capture.open(url);
@@ -34,56 +33,58 @@ bool hzd::CaptureStream::Open(int captureIndex, unsigned int _workerCount) {
         fullSem.signal();
         capture.release();
         matQueue.clear();
-        readCountQueue.clear();
     }
     workerCount = _workerCount;
     return capture.open(captureIndex);
 }
 
 bool hzd::CaptureStream::Read(cv::Mat &frame, unsigned int expectIndex) {
+BLOCK_REIN:
     std::unique_lock<std::mutex> uniqueLock(readMutex);
     // 当还没有读到该帧时
-    if(expectIndex - matQueue.front().index >= matQueue.size()) {
+    if(matQueue.empty() || expectIndex > matQueue.back().index) {
         // 当缓存满时等待
         if(matQueue.size() >= 256) {
+            std::cout << "block" << std::endl;
             uniqueLock.unlock();
             fullSem.wait();
             if(!capture.isOpened()) return false;
-            uniqueLock.lock();
+            goto BLOCK_REIN;
         }
-
         matQueue.emplace_back();
-        readCountQueue.emplace_back(workerCount-1);
         matQueue.back().index = expectIndex;
+        matQueue.back().readCount = workerCount - 1;
         if(!capture.read(matQueue.back().mat)){
             matQueue.pop_back();
-            readCountQueue.pop_back();
             LOG_ERROR(CaptureStreamChan,"read new mat failed");
             return false;
         }
         // 由于Mat有引用计数，比较安全。
-        if(readCountQueue.front() == 0){
+        if(matQueue.front().readCount == 0){
             frame = std::move(matQueue.front().mat);
             matQueue.pop_front();
-            readCountQueue.pop_front();
         }else{
             frame = matQueue.back().mat;
         }
     }
     // 当已经读过该帧
     else{
-        readCountQueue[expectIndex - matQueue.front().index]--;
-
-        if(expectIndex == matQueue.front().index
-        && readCountQueue.front() == 0) {
-            frontIndex++;
-            frame = std::move(matQueue.front().mat);
-            matQueue.pop_front();
-            readCountQueue.pop_front();
-            if(matQueue.size() < 256)  fullSem.signalAll();
-        }else{
-            frame = matQueue[expectIndex - matQueue.front().index].mat;
+        auto iter = std::find_if(matQueue.begin(),matQueue.end(),[=](const _Mat& _mat){
+           return _mat.index == expectIndex;
+        });
+        if(iter == matQueue.end())  {
+            LOG_ERROR(CaptureStreamChan,"read new mat failed");
+            return false;
         }
+        --iter->readCount;
+        frame = iter->mat;
+        bool flag = false;
+        if(matQueue.size() >= 256) flag = true;
+        while(!matQueue.empty() && matQueue.front().readCount <= 0) {
+            std::cout << "delete -" << std::endl;
+            matQueue.pop_front();
+        }
+        if(flag && matQueue.size() < 256) fullSem.signalAll();
     }
     return true;
 
@@ -99,6 +100,5 @@ void hzd::CaptureStream::Release() {
         capture.release();
         workerCount = 0;
         matQueue.clear();
-        readCountQueue.clear();
     }
 }

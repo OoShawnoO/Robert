@@ -291,7 +291,7 @@ namespace hzd {
                         if(flag) break;
                     }
                 } else {
-                    auto minDistance = DBL_MIN;
+                    auto minDistance = DBL_MAX;
                     const Item *minItemB = nullptr;
                     for (const auto &itmA: itemAs) {
                         for (const auto &itmB: itemBs) {
@@ -399,7 +399,7 @@ namespace hzd {
                         if(flag) break;
                     }
                 } else {
-                    auto minDistance = DBL_MIN;
+                    auto minDistance = DBL_MAX;
                     const Item *minItemB = nullptr;
                     for (const auto &itmA: itemAs) {
                         for (const auto &itmB: itemBs) {

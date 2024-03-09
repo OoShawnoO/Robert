@@ -35,7 +35,7 @@
 test
 cmake-build-debug
 .idea
-Terminal/bin/solutions/*
+
 # Binary
 Terminal/bin/Terminal
 Service/bin/Service

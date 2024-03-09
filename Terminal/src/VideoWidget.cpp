@@ -153,7 +153,6 @@ namespace hzd {
                 );
                 isConfig = false;
             }
-
             if(!sendControlPacket(frameId++,Work,Right)){
                 error("发送控制包失败!");
                 break;
@@ -167,7 +166,6 @@ namespace hzd {
             if(isSaveVideo && writer.isOpened()) {
                 writeChan.push({WriteProp::Write,mat.clone()});
             }
-
             if(json["code"] != 0) {
                 QString time = std::string(json["time"]).c_str();
                 QString procedure = std::string(json["procedure"]).c_str();

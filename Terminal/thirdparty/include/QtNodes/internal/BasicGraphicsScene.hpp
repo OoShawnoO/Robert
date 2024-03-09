@@ -147,8 +147,6 @@ public Q_SLOTS:
 
     void onNodeUpdated(NodeId const nodeId);
 
-    void onNodeClicked(NodeId const nodeId);
-
     void onModelReset();
 
 private:
@@ -167,8 +165,6 @@ private:
     std::unique_ptr<AbstractNodeGeometry> _nodeGeometry;
 
     std::unique_ptr<AbstractNodePainter> _nodePainter;
-
-    bool _nodeDrag;
 
     QUndoStack *_undoStack;
 

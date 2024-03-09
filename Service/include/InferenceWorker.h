@@ -49,7 +49,7 @@ namespace hzd {
         Yolo::YoloVersion                       yoloVersion;
         bool&                                   isStop;
         CaptureStream&                          captureStream;
-        unsigned int                            currentFrameCount{};
+        unsigned int                            currentFrameCount{0};
     };
 
 } // hzd

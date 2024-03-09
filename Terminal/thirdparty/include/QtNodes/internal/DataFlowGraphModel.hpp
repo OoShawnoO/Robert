@@ -100,10 +100,6 @@ Q_SIGNALS:
 private:
     NodeId newNodeId() override { return _nextNodeId++; }
 
-    void sendConnectionCreation(ConnectionId const connectionId);
-
-    void sendConnectionDeletion(ConnectionId const connectionId);
-
 private Q_SLOTS:
     /**
    * Fuction is called in three cases:
