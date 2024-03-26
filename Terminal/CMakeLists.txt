@@ -36,7 +36,6 @@ include_directories(../Utils/include)
 include_directories(include/editor)
 include_directories(thirdparty/include/QtNodes/internal)
 include_directories(thirdparty/include/QtNodes)
-#include_directories(thirdparty/src/QtNodes)
 # Library
 link_directories(lib)
 link_directories(../Utils/lib)

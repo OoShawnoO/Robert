@@ -45,7 +45,6 @@ BLOCK_REIN:
     if(matQueue.empty() || expectIndex > matQueue.back().index) {
         // 当缓存满时等待
         if(matQueue.size() >= 256) {
-            std::cout << "block" << std::endl;
             uniqueLock.unlock();
             fullSem.wait();
             if(!capture.isOpened()) return false;
@@ -81,7 +80,6 @@ BLOCK_REIN:
         bool flag = false;
         if(matQueue.size() >= 256) flag = true;
         while(!matQueue.empty() && matQueue.front().readCount <= 0) {
-            std::cout << "delete -" << std::endl;
             matQueue.pop_front();
         }
         if(flag && matQueue.size() < 256) fullSem.signalAll();

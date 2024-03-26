@@ -42,3 +42,8 @@ Service/bin/Service
 
 # Media
 *.mp4
+
+# doxygen
+Doxygen.config
+latex/*
+html/*
