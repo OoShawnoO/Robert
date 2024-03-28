@@ -102,6 +102,16 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
                     }
                 }
             }
+            if(!missionReactor.settlement.startBound.empty()){
+                cv::rectangle(frame,missionReactor.settlement.startBound,cv::Scalar(0,0,123),2);
+            }
+            if(!missionReactor.settlement.endBound.empty()){
+                cv::rectangle(frame,missionReactor.settlement.endBound,cv::Scalar(0,0,123),2);
+            }
+            for(const auto& pMission : missionReactor.workMissions) {
+                if(pMission->bound.empty()) continue;
+                cv::rectangle(frame,pMission->bound,cv::Scalar(0,0,123),2);
+            }
             result = missionReactor.React(input);
             break;
         }

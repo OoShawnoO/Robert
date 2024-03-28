@@ -213,7 +213,7 @@ namespace hzd {
                         try {
                             const auto& items = input.itemVecMap.at(settlement.startItems[0]);
                             for(const auto& item : items ) {
-                                flag = Item::Consist(settlement.startBound,item);
+                                flag = Item::Cross(settlement.startBound,item);
                                 if(flag) break;
                             }
                         }catch (...){
@@ -300,7 +300,7 @@ namespace hzd {
                         try {
                             auto items = input.itemVecMap.at(settlement.endItems[0]);
                             for(const auto& item : items ) {
-                                flag = Item::Consist(settlement.endBound,item);
+                                flag = Item::Cross(settlement.endBound,item);
                                 if(flag) break;
                             }
                         }catch (...) {
@@ -339,7 +339,7 @@ namespace hzd {
                         try {
                             auto items = input.itemVecMap.at(settlement.endItems[0]);
                             for(const auto& item : items ) {
-                                flag &= !Item::Consist(settlement.endBound,item);
+                                flag &= !Item::Cross(settlement.endBound,item);
                             }
                         }catch (...) {
                             flag = false;
@@ -353,6 +353,7 @@ namespace hzd {
             case Settlement::End : {
                 LOG_WARN(MissionReactorChan,"结束帧号:" + std::to_string(input.frameNo));
                 historyResult.clear();
+                flagCount = 0;
                 signalMap.clear();
                 signalMap[0] = true;
                 settlement.status = Settlement::Wait;
