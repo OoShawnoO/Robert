@@ -175,7 +175,7 @@ namespace hzd {
     MissionReactor::Res MissionReactor::React(
             const MissionReactor::ReactInput &input
     ) {
-        if(frameNo++ == analysisFrameCount) {
+        if(++frameNo%analysisFrameCount == 0) {
             auto duration =
             (double)std::chrono::duration_cast<std::chrono::milliseconds >(
                     std::chrono::system_clock::now() - frameClock

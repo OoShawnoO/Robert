@@ -130,6 +130,7 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
         }
         // 客户端选择配置
         case Config : {
+            Clear();
             // recv config json
             std::string temp;
             if(!TCPSocket::RecvWithHeader(temp, false)) {
@@ -141,8 +142,6 @@ hzd::Connection::CallbackReturnType hzd::ServiceConnection::AfterReadCallback() 
                 LOG_ERROR(ServiceConnectionChan,"config file parse failed");
                 return FAILED;
             }
-
-            Clear();
 
             // load config json
             if(!interflowConfigure.Load(Configure::Get())){
@@ -323,6 +322,7 @@ void hzd::ServiceConnection::Clear() {
         threads.clear();
         detectionItems.clear();
         poseItems.clear();
+        missionReactor.Clear();
     }
     isStop = false;
 }
