@@ -179,7 +179,7 @@ namespace hzd {
             auto duration =
             (double)std::chrono::duration_cast<std::chrono::milliseconds >(
                     std::chrono::system_clock::now() - frameClock
-            ).count() / 1000;
+            ).count() / 1000.0;
 
             fps = (int)(analysisFrameCount / duration);
             frameNo = 0;
@@ -254,7 +254,7 @@ namespace hzd {
                 flagCount = 0;
                 settlement.status = Settlement::Status::Running;
                 startFrameNo = input.frameNo + 1;
-                LOG_TRACE(MissionReactorChan,"开始帧号:" + std::to_string(startFrameNo));
+                LOG_WARN(MissionReactorChan,"开始帧号:" + std::to_string(startFrameNo));
                 res.status = ResStatus::Start;
                 break;
             }
